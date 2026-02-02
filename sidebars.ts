@@ -148,6 +148,11 @@ const sidebars: SidebarsConfig = {
       label: 'Metrics',
     },
     {
+      type: 'doc',
+      id: 'mqtt/cli',
+      label: 'CLI Tool',
+    },
+    {
       type: 'category',
       label: 'Examples',
       items: [

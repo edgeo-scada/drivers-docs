@@ -87,6 +87,7 @@ func main() {
 | [Pool](pool.md) | Connection pooling |
 | [Errors](errors.md) | Error handling |
 | [Metrics](metrics.md) | Metrics and monitoring |
+| [CLI](cli.md) | mqttcli command-line tool |
 | [Changelog](changelog.md) | Version history |
 
 ## Examples
