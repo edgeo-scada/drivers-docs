@@ -17,22 +17,23 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link
-            className="button button--secondary button--lg"
-            to="/docs/modbus/">
+          <Link className="button button--secondary button--lg" to="/docs/modbus/">
             Modbus TCP
           </Link>
-          <Link
-            className="button button--secondary button--lg"
-            style={{marginLeft: '1rem'}}
-            to="/docs/opcua/">
+          <Link className="button button--secondary button--lg" to="/docs/opcua/">
             OPC UA
           </Link>
-          <Link
-            className="button button--secondary button--lg"
-            style={{marginLeft: '1rem'}}
-            to="/docs/mqtt/">
+          <Link className="button button--secondary button--lg" to="/docs/mqtt/">
             MQTT
+          </Link>
+          <Link className="button button--secondary button--lg" to="/docs/s7/">
+            S7
+          </Link>
+          <Link className="button button--secondary button--lg" to="/docs/bacnet/">
+            BACnet
+          </Link>
+          <Link className="button button--secondary button--lg" to="/docs/snmp/">
+            SNMP
           </Link>
         </div>
       </div>
@@ -79,12 +80,43 @@ const FeatureList: FeatureItem[] = [
     ),
     link: '/docs/mqtt/',
   },
+  {
+    title: 'S7 (Siemens)',
+    description: (
+      <>
+        Full S7comm protocol implementation for Siemens PLCs. Supports S7-200, S7-300,
+        S7-400, S7-1200, S7-1500, and LOGO! with connection pooling and multi-item operations.
+      </>
+    ),
+    link: '/docs/s7/',
+  },
+  {
+    title: 'BACnet',
+    description: (
+      <>
+        Pure Go BACnet/IP client for building automation systems. Device discovery,
+        ReadProperty, WriteProperty, and COV subscriptions with BBMD support for
+        cross-subnet communication.
+      </>
+    ),
+    link: '/docs/bacnet/',
+  },
+  {
+    title: 'SNMP',
+    description: (
+      <>
+        Complete SNMP v1/v2c/v3 client with trap listener support. SNMPv3 authentication
+        (SHA-256/512) and encryption (AES-256), connection pooling, and MIB walk operations.
+      </>
+    ),
+    link: '/docs/snmp/',
+  },
 ];
 
 function Feature({title, description, link}: FeatureItem) {
   return (
     <div className={clsx('col col--4')}>
-      <div className="text--center padding-horiz--md">
+      <div className="text--center padding-horiz--md" style={{marginBottom: '2rem'}}>
         <Heading as="h3">{title}</Heading>
         <p>{description}</p>
         <Link className="button button--primary" to={link}>
@@ -114,7 +146,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Industrial Protocol Drivers"
-      description="Multi-protocol industrial communication drivers for Go - Modbus TCP and OPC UA">
+      description="Multi-protocol industrial communication drivers for Go - Modbus TCP, OPC UA, MQTT, S7, BACnet, and SNMP">
       <HomepageHeader />
       <main>
         <HomepageFeatures />

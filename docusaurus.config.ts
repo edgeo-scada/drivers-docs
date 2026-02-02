@@ -77,6 +77,24 @@ const config: Config = {
           label: 'MQTT',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 's7Sidebar',
+          position: 'left',
+          label: 'S7',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'bacnetSidebar',
+          position: 'left',
+          label: 'BACnet',
+        },
+        {
+          type: 'docSidebar',
+          sidebarId: 'snmpSidebar',
+          position: 'left',
+          label: 'SNMP',
+        },
+        {
           href: 'https://github.com/edgeo/drivers',
           label: 'GitHub',
           position: 'right',
@@ -100,6 +118,18 @@ const config: Config = {
             {
               label: 'MQTT',
               to: '/docs/mqtt/',
+            },
+            {
+              label: 'S7',
+              to: '/docs/s7/',
+            },
+            {
+              label: 'BACnet',
+              to: '/docs/bacnet/',
+            },
+            {
+              label: 'SNMP',
+              to: '/docs/snmp/',
             },
           ],
         },
