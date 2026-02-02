@@ -28,6 +28,12 @@ function HomepageHeader() {
             to="/docs/opcua/">
             OPC UA
           </Link>
+          <Link
+            className="button button--secondary button--lg"
+            style={{marginLeft: '1rem'}}
+            to="/docs/mqtt/">
+            MQTT
+          </Link>
         </div>
       </div>
     </header>
@@ -63,14 +69,15 @@ const FeatureList: FeatureItem[] = [
     link: '/docs/opcua/',
   },
   {
-    title: 'Production Ready',
+    title: 'MQTT',
     description: (
       <>
-        Built for production with connection pooling, health checks, structured logging,
-        and Prometheus-compatible metrics. All drivers are thread-safe and context-aware.
+        Pure Go MQTT 5.0 client with TLS, WebSocket, and connection pooling.
+        Supports all QoS levels, topic wildcards, and automatic reconnection with
+        exponential backoff.
       </>
     ),
-    link: '/docs/modbus/metrics',
+    link: '/docs/mqtt/',
   },
 ];
 

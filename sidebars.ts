@@ -111,6 +111,56 @@ const sidebars: SidebarsConfig = {
       label: 'Changelog',
     },
   ],
+  mqttSidebar: [
+    {
+      type: 'doc',
+      id: 'mqtt/index',
+      label: 'Introduction',
+    },
+    {
+      type: 'doc',
+      id: 'mqtt/getting-started',
+      label: 'Getting Started',
+    },
+    {
+      type: 'doc',
+      id: 'mqtt/client',
+      label: 'Client',
+    },
+    {
+      type: 'doc',
+      id: 'mqtt/pool',
+      label: 'Connection Pool',
+    },
+    {
+      type: 'doc',
+      id: 'mqtt/options',
+      label: 'Configuration',
+    },
+    {
+      type: 'doc',
+      id: 'mqtt/errors',
+      label: 'Error Handling',
+    },
+    {
+      type: 'doc',
+      id: 'mqtt/metrics',
+      label: 'Metrics',
+    },
+    {
+      type: 'category',
+      label: 'Examples',
+      items: [
+        'mqtt/examples/publisher',
+        'mqtt/examples/subscriber',
+      ],
+    },
+    {
+      type: 'doc',
+      id: 'mqtt/changelog',
+      label: 'Changelog',
+    },
+  ],
 };
 
 export default sidebars;

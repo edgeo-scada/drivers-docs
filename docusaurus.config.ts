@@ -66,6 +66,12 @@ const config: Config = {
           label: 'OPC UA',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 'mqttSidebar',
+          position: 'left',
+          label: 'MQTT',
+        },
+        {
           href: 'https://github.com/edgeo/drivers',
           label: 'GitHub',
           position: 'right',
@@ -85,6 +91,10 @@ const config: Config = {
             {
               label: 'OPC UA',
               to: '/docs/opcua/',
+            },
+            {
+              label: 'MQTT',
+              to: '/docs/mqtt/',
             },
           ],
         },
