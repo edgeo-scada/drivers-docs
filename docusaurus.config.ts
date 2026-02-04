@@ -36,7 +36,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/edgeo/drivers/tree/main/docs/',
+          editUrl: 'https://github.com/edgeo-scada/drivers-docs/tree/main/',
         },
         blog: false,
         theme: {
@@ -95,7 +95,7 @@ const config: Config = {
           label: 'SNMP',
         },
         {
-          href: 'https://github.com/edgeo/drivers',
+          href: 'https://github.com/edgeo-scada/drivers-docs',
           label: 'GitHub',
           position: 'right',
         },
@@ -138,7 +138,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/edgeo/drivers',
+              href: 'https://github.com/edgeo-scada/drivers-docs',
             },
           ],
         },
