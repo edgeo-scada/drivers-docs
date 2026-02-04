@@ -1,0 +1,25 @@
+services:
+  # Production - static build served by nginx
+  docs:
+    build:
+      context: .
+      target: production
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  # Development - hot reload enabled
+  docs-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./docs:/app/docs
+      - ./src:/app/src
+      - ./static:/app/static
+      - ./docusaurus.config.ts:/app/docusaurus.config.ts
+      - ./sidebars.ts:/app/sidebars.ts
+    profiles:
+      - dev
