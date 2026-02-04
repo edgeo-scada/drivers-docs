@@ -7,20 +7,21 @@ slug: /opcua/
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](./changelog)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/opcua/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fopcua-181717?logo=github)](https://github.com/edgeo-scada/opcua)
 
 A complete Go implementation of the OPC UA protocol, with client, server, and connection pool.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/opcua@v1.0.0
+go get github.com/edgeo-scada/opcua@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo/drivers/opcua"
+import "github.com/edgeo-scada/opcua"
 
 func main() {
     fmt.Printf("OPC UA driver version: %s\n", opcua.Version)
@@ -65,7 +66,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/edgeo/drivers/opcua"
+    "github.com/edgeo-scada/opcua"
 )
 
 func main() {
