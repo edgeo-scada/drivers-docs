@@ -7,20 +7,21 @@ slug: /bacnet/
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/bacnet/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fbacnet-181717?logo=github)](https://github.com/edgeo-scada/bacnet)
 
 Pure Go BACnet/IP client library for building automation and control systems.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/bacnet@v1.0.0
+go get github.com/edgeo-scada/bacnet@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo/drivers/bacnet"
+import "github.com/edgeo-scada/bacnet"
 
 func main() {
     fmt.Printf("BACnet driver version: %s\n", bacnet.Version)
@@ -64,7 +65,7 @@ import (
     "context"
     "log"
 
-    "github.com/edgeo/drivers/bacnet/bacnet"
+    "github.com/edgeo-scada/bacnet"
 )
 
 func main() {

@@ -7,20 +7,21 @@ slug: /snmp/
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/snmp/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fsnmp-181717?logo=github)](https://github.com/edgeo-scada/snmp)
 
 Complete Go implementation of SNMP v1/v2c/v3 client with trap support for network management.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/snmp@v1.0.0
+go get github.com/edgeo-scada/snmp@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo/drivers/snmp"
+import "github.com/edgeo-scada/snmp"
 
 func main() {
     fmt.Printf("SNMP driver version: %s\n", snmp.Version)
@@ -62,7 +63,7 @@ import (
     "context"
     "log"
 
-    "github.com/edgeo/drivers/snmp/snmp"
+    "github.com/edgeo-scada/snmp"
 )
 
 func main() {

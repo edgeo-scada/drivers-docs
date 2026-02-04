@@ -7,20 +7,21 @@ slug: /mqtt/
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/mqtt/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fmqtt-181717?logo=github)](https://github.com/edgeo-scada/mqtt)
 
 Pure Go MQTT 5.0 client library with TLS, WebSocket, and connection pooling support.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/mqtt@v1.0.0
+go get github.com/edgeo-scada/mqtt@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo/drivers/mqtt"
+import "github.com/edgeo-scada/mqtt"
 
 func main() {
     fmt.Printf("MQTT driver version: %s\n", mqtt.Version)
@@ -64,7 +65,7 @@ import (
     "context"
     "log"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt"
 )
 
 func main() {

@@ -7,7 +7,7 @@ slug: /opcua/
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](./changelog)
 
 A complete Go implementation of the OPC UA protocol, with client, server, and connection pool.
 

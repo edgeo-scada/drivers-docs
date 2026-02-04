@@ -7,20 +7,21 @@ slug: /s7/
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/s7/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fs7-181717?logo=github)](https://github.com/edgeo-scada/s7)
 
 Pure Go implementation of the Siemens S7 communication protocol (S7comm) for industrial PLCs.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/s7@v1.0.0
+go get github.com/edgeo-scada/s7@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo/drivers/s7"
+import "github.com/edgeo-scada/s7"
 
 func main() {
     fmt.Printf("S7 driver version: %s\n", s7.Version)
@@ -75,7 +76,7 @@ import (
     "context"
     "log"
 
-    "github.com/edgeo/drivers/s7/s7"
+    "github.com/edgeo-scada/s7"
 )
 
 func main() {
