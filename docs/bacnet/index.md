@@ -1,10 +1,32 @@
+---
+sidebar_position: 1
+slug: /bacnet/
+---
+
 # BACnet Client Library
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
+[![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
 
 Pure Go BACnet/IP client library for building automation and control systems.
 
-## Overview
+## Installation
 
-This library provides a complete implementation of the BACnet/IP protocol for Go, designed for building automation applications requiring communication with HVAC controllers, lighting systems, and other BACnet-enabled devices.
+```bash
+go get github.com/edgeo/drivers/bacnet@v1.0.0
+```
+
+To verify the installed version:
+
+```go
+import "github.com/edgeo/drivers/bacnet"
+
+func main() {
+    fmt.Printf("BACnet driver version: %s\n", bacnet.Version)
+    // Output: BACnet driver version: 1.0.0
+}
+```
 
 ## Features
 
@@ -32,12 +54,6 @@ This library provides a complete implementation of the BACnet/IP protocol for Go
 - COV subscriptions for real-time updates
 - Built-in metrics
 - Comprehensive error handling
-
-## Installation
-
-```bash
-go get github.com/edgeo/drivers/bacnet
-```
 
 ## Quick Example
 
@@ -147,10 +163,5 @@ bacnet/
 
 ## Compatibility
 
-- Go 1.22+
 - BACnet/IP
 - Tested with Tridium, Honeywell, Johnson Controls, Siemens
-
-## License
-
-MIT License

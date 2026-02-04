@@ -1,10 +1,32 @@
+---
+sidebar_position: 1
+slug: /snmp/
+---
+
 # SNMP Client Library
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
+[![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
 
 Complete Go implementation of SNMP v1/v2c/v3 client with trap support for network management.
 
-## Overview
+## Installation
 
-This library provides a full implementation of the Simple Network Management Protocol (SNMP) for Go, designed for network monitoring, device management, and industrial applications.
+```bash
+go get github.com/edgeo/drivers/snmp@v1.0.0
+```
+
+To verify the installed version:
+
+```go
+import "github.com/edgeo/drivers/snmp"
+
+func main() {
+    fmt.Printf("SNMP driver version: %s\n", snmp.Version)
+    // Output: SNMP driver version: 1.0.0
+}
+```
 
 ## Features
 
@@ -30,12 +52,6 @@ This library provides a full implementation of the Simple Network Management Pro
 - Automatic reconnection
 - Built-in trap listener
 - Comprehensive metrics
-
-## Installation
-
-```bash
-go get github.com/edgeo/drivers/snmp
-```
 
 ## Quick Example
 
@@ -132,10 +148,5 @@ snmp/
 
 ## Compatibility
 
-- Go 1.22+
 - SNMPv1, SNMPv2c, SNMPv3
 - Tested with Cisco, HP, Juniper, Linux net-snmp
-
-## License
-
-MIT License

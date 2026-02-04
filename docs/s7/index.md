@@ -1,10 +1,32 @@
+---
+sidebar_position: 1
+slug: /s7/
+---
+
 # S7 Client Library
+
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
+[![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo/drivers/blob/main/LICENSE)
 
 Pure Go implementation of the Siemens S7 communication protocol (S7comm) for industrial PLCs.
 
-## Overview
+## Installation
 
-This library provides a complete implementation of the Siemens S7 protocol for Go, designed for industrial automation applications requiring reliable communication with S7 PLCs.
+```bash
+go get github.com/edgeo/drivers/s7@v1.0.0
+```
+
+To verify the installed version:
+
+```go
+import "github.com/edgeo/drivers/s7"
+
+func main() {
+    fmt.Printf("S7 driver version: %s\n", s7.Version)
+    // Output: S7 driver version: 1.0.0
+}
+```
 
 ## Supported PLCs
 
@@ -43,12 +65,6 @@ This library provides a complete implementation of the Siemens S7 protocol for G
 - Automatic reconnection with exponential backoff
 - Multi-item read/write operations
 - Built-in metrics and performance tracking
-
-## Installation
-
-```bash
-go get github.com/edgeo/drivers/s7
-```
 
 ## Quick Example
 
@@ -127,10 +143,5 @@ s7/
 
 ## Compatibility
 
-- Go 1.21+
 - All S7 PLC series
 - TCP/IP connectivity
-
-## License
-
-MIT License
