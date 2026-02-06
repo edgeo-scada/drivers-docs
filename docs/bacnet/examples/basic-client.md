@@ -17,7 +17,7 @@ import (
     "os"
     "time"
 
-    "github.com/edgeo-scada/drivers/bacnet"
+    "github.com/edgeo-scada/bacnet"
 )
 
 func main() {

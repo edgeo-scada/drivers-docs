@@ -14,7 +14,7 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo-scada/drivers/bacnet"
+    "github.com/edgeo-scada/bacnet"
 )
 
 func main() {
@@ -78,7 +78,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo-scada/drivers/bacnet"
+    "github.com/edgeo-scada/bacnet"
 )
 
 type Subscription struct {

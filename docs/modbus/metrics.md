@@ -147,7 +147,7 @@ package main
 import (
     "net/http"
 
-    "github.com/edgeo-scada/drivers/modbus"
+    "github.com/edgeo-scada/modbus"
     "github.com/prometheus/client_golang/prometheus"
     "github.com/prometheus/client_golang/prometheus/promhttp"
 )

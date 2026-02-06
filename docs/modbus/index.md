@@ -2,21 +2,21 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/drivers/modbus/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/drivers/modbus)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/modbus/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/modbus)
 
 A complete Go implementation of the Modbus TCP protocol, with client, server, and connection pool.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/drivers/modbus@v1.0.0
+go get github.com/edgeo-scada/modbus@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo-scada/drivers/modbus"
+import "github.com/edgeo-scada/modbus"
 
 func main() {
     fmt.Printf("Modbus driver version: %s\n", modbus.Version)
@@ -59,7 +59,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/edgeo-scada/drivers/modbus"
+    "github.com/edgeo-scada/modbus"
 )
 
 func main() {

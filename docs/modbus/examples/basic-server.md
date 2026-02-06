@@ -16,7 +16,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/edgeo-scada/drivers/modbus"
+    "github.com/edgeo-scada/modbus"
 )
 
 func main() {
@@ -114,7 +114,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo-scada/drivers/modbus"
+    "github.com/edgeo-scada/modbus"
 )
 
 type TemperatureSensorHandler struct {

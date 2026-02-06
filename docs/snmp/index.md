@@ -2,15 +2,15 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/drivers/snmp/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/drivers/snmp)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/snmp/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/snmp)
 
 A complete implementation of the SNMP (Simple Network Management Protocol) protocol in Go, supporting versions v1, v2c, and v3.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/drivers/snmp
+go get github.com/edgeo-scada/snmp
 ```
 
 ## Features
@@ -34,7 +34,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/edgeo-scada/drivers/snmp"
+    "github.com/edgeo-scada/snmp"
 )
 
 func main() {
@@ -132,4 +132,4 @@ edgeo-snmp trap-listen --listen ":1162"
 
 ## License
 
-Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/drivers/snmp/blob/main/LICENSE) for details.
+Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/snmp/blob/main/LICENSE) for details.

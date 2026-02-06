@@ -5,7 +5,7 @@ This guide will help you get started quickly with the SNMP library.
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/drivers/snmp
+go get github.com/edgeo-scada/snmp
 ```
 
 ## Basic Concepts
@@ -47,7 +47,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/edgeo-scada/drivers/snmp"
+    "github.com/edgeo-scada/snmp"
 )
 
 func main() {
@@ -184,7 +184,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/edgeo-scada/drivers/snmp"
+    "github.com/edgeo-scada/snmp"
 )
 
 func main() {

@@ -110,7 +110,7 @@ package main
 import (
     "net/http"
 
-    "github.com/edgeo-scada/drivers/s7"
+    "github.com/edgeo-scada/s7"
     "github.com/prometheus/client_golang/prometheus"
     "github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -244,7 +244,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/edgeo-scada/drivers/s7"
+    "github.com/edgeo-scada/s7"
 )
 
 func main() {

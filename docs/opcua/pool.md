@@ -245,7 +245,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo-scada/drivers/opcua"
+    "github.com/edgeo-scada/opcua"
 )
 
 func main() {

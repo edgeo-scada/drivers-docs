@@ -375,7 +375,7 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo-scada/drivers/mqtt"
+    "github.com/edgeo-scada/mqtt"
 )
 
 type SensorData struct {

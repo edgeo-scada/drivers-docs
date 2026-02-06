@@ -22,7 +22,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo-scada/drivers/snmp"
+    "github.com/edgeo-scada/snmp"
 )
 
 func main() {
@@ -167,7 +167,7 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo-scada/drivers/snmp"
+    "github.com/edgeo-scada/snmp"
 )
 
 type DeviceStats struct {

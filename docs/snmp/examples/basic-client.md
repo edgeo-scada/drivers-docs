@@ -13,7 +13,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo-scada/drivers/snmp"
+    "github.com/edgeo-scada/snmp"
 )
 
 func main() {

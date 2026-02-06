@@ -7,7 +7,7 @@
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/drivers/s7
+go get github.com/edgeo-scada/s7
 ```
 
 ## S7 Client
@@ -23,7 +23,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo-scada/drivers/s7"
+    "github.com/edgeo-scada/s7"
 )
 
 func main() {

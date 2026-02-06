@@ -19,7 +19,7 @@ import (
     "sort"
     "time"
 
-    "github.com/edgeo-scada/drivers/bacnet"
+    "github.com/edgeo-scada/bacnet"
 )
 
 type DeviceDetails struct {
