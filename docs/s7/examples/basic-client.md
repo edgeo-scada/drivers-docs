@@ -15,7 +15,7 @@ import (
     "os"
     "time"
 
-    "github.com/edgeo-scada/s7/s7"
+    "github.com/edgeo-scada/drivers/s7"
 )
 
 func main() {

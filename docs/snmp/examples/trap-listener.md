@@ -19,7 +19,7 @@ import (
     "syscall"
     "time"
 
-    "github.com/edgeo-scada/snmp/snmp"
+    "github.com/edgeo-scada/drivers/snmp"
 )
 
 func main() {

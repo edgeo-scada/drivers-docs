@@ -2,8 +2,8 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/bacnet/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/bacnet)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/drivers/bacnet/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/drivers/bacnet)
 
 A comprehensive BACnet/IP client implementation for Go, designed for building automation and control systems.
 
@@ -21,7 +21,7 @@ A comprehensive BACnet/IP client implementation for Go, designed for building au
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/bacnet
+go get github.com/edgeo-scada/drivers/bacnet
 ```
 
 ## Quick Start
@@ -35,7 +35,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo-scada/bacnet/bacnet"
+    "github.com/edgeo-scada/drivers/bacnet"
 )
 
 func main() {
@@ -142,4 +142,4 @@ Common properties with shorthand aliases:
 
 ## License
 
-Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/bacnet/blob/main/LICENSE) for details.
+Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/drivers/bacnet/blob/main/LICENSE) for details.

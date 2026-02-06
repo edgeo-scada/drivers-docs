@@ -7,7 +7,7 @@
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/opcua
+go get github.com/edgeo-scada/drivers/opcua
 ```
 
 ## OPC UA Client
@@ -23,7 +23,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo-scada/opcua"
+    "github.com/edgeo-scada/drivers/opcua"
 )
 
 func main() {
@@ -150,7 +150,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/edgeo-scada/opcua"
+    "github.com/edgeo-scada/drivers/opcua"
 )
 
 func main() {

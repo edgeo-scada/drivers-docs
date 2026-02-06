@@ -1,6 +1,180 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
 const sidebars: SidebarsConfig = {
+  // Main SCADA platform sidebar
+  scadaSidebar: [
+    {
+      type: 'doc',
+      id: 'introduction',
+      label: 'Introduction',
+    },
+    // ── Getting Started ──
+    {
+      type: 'category',
+      label: 'Getting Started',
+      collapsed: false,
+      items: [
+        {
+          type: 'doc',
+          id: 'architecture',
+          label: 'Architecture',
+        },
+        {
+          type: 'doc',
+          id: 'installation',
+          label: 'Installation',
+        },
+        {
+          type: 'doc',
+          id: 'configuration',
+          label: 'Configuration',
+        },
+      ],
+    },
+    // ── Data Acquisition ──
+    {
+      type: 'category',
+      label: 'Data Acquisition',
+      collapsed: false,
+      items: [
+        {
+          type: 'doc',
+          id: 'devices',
+          label: 'Devices',
+        },
+        {
+          type: 'category',
+          label: 'Drivers',
+          link: {
+            type: 'doc',
+            id: 'drivers/index',
+          },
+          items: [
+            {
+              type: 'ref',
+              id: 'modbus/index',
+              label: 'Modbus TCP',
+            },
+            {
+              type: 'ref',
+              id: 'opcua/index',
+              label: 'OPC UA',
+            },
+            {
+              type: 'ref',
+              id: 'mqtt/index',
+              label: 'MQTT',
+            },
+            {
+              type: 'ref',
+              id: 's7/index',
+              label: 'S7',
+            },
+            {
+              type: 'ref',
+              id: 'bacnet/index',
+              label: 'BACnet',
+            },
+            {
+              type: 'ref',
+              id: 'snmp/index',
+              label: 'SNMP',
+            },
+          ],
+        },
+      ],
+    },
+    // ── Alarming ──
+    {
+      type: 'category',
+      label: 'Alarming',
+      collapsed: false,
+      items: [
+        {
+          type: 'doc',
+          id: 'alarms',
+          label: 'Alarms',
+        },
+        {
+          type: 'doc',
+          id: 'notifications',
+          label: 'Notifications',
+        },
+      ],
+    },
+    // ── Historian ──
+    {
+      type: 'doc',
+      id: 'historian',
+      label: 'Historian',
+    },
+    // ── Dashboard ──
+    {
+      type: 'category',
+      label: 'Dashboard',
+      collapsed: false,
+      items: [
+        {
+          type: 'doc',
+          id: 'dashboard',
+          label: 'Overview',
+        },
+        {
+          type: 'doc',
+          id: 'widgets',
+          label: 'Widgets',
+        },
+        {
+          type: 'doc',
+          id: 'graphics',
+          label: 'SVG Graphics',
+        },
+      ],
+    },
+    // ── Networking ──
+    {
+      type: 'category',
+      label: 'Networking',
+      items: [
+        {
+          type: 'doc',
+          id: 'gateway',
+          label: 'Gateway',
+        },
+      ],
+    },
+    // ── Administration ──
+    {
+      type: 'category',
+      label: 'Administration',
+      items: [
+        {
+          type: 'doc',
+          id: 'users',
+          label: 'Users & RBAC',
+        },
+      ],
+    },
+    // ── Reference ──
+    {
+      type: 'category',
+      label: 'Reference',
+      items: [
+        {
+          type: 'doc',
+          id: 'api',
+          label: 'API Reference',
+        },
+        {
+          type: 'doc',
+          id: 'cli',
+          label: 'CLI',
+        },
+      ],
+    },
+  ],
+
+  // Driver-specific sidebars
   modbusSidebar: [
     {
       type: 'doc',

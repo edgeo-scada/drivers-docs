@@ -2,15 +2,15 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/snmp/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/snmp)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/drivers/snmp/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/drivers/snmp)
 
 A complete implementation of the SNMP (Simple Network Management Protocol) protocol in Go, supporting versions v1, v2c, and v3.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/snmp
+go get github.com/edgeo-scada/drivers/snmp
 ```
 
 ## Features
@@ -34,7 +34,7 @@ import (
     "fmt"
     "log"
 
-    "github.com/edgeo-scada/snmp/snmp"
+    "github.com/edgeo-scada/drivers/snmp"
 )
 
 func main() {
@@ -71,19 +71,18 @@ func main() {
 
 ```
 snmp/
-├── snmp/
-│   ├── client.go      # Main SNMP client
-│   ├── pool.go        # Connection pool
-│   ├── trap.go        # Trap listener
-│   ├── protocol.go    # BER encoding/decoding
-│   ├── packets.go     # PDU structures and messages
-│   ├── types.go       # Types and OIDs
-│   ├── options.go     # Configuration options
-│   ├── errors.go      # Error handling
-│   ├── metrics.go     # Metrics
-│   └── version.go     # SNMP versions
+├── client.go      # Main SNMP client
+├── pool.go        # Connection pool
+├── trap.go        # Trap listener
+├── protocol.go    # BER encoding/decoding
+├── packets.go     # PDU structures and messages
+├── types.go       # Types and OIDs
+├── options.go     # Configuration options
+├── errors.go      # Error handling
+├── metrics.go     # Metrics
+├── version.go     # SNMP versions
 └── cmd/
-    └── edgeo-snmp/    # CLI
+    └── edgeo-snmp/ # CLI
 ```
 
 ## Documentation
@@ -133,4 +132,4 @@ edgeo-snmp trap-listen --listen ":1162"
 
 ## License
 
-Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/snmp/blob/main/LICENSE) for details.
+Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/drivers/snmp/blob/main/LICENSE) for details.

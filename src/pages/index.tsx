@@ -17,23 +17,14 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link className="button button--secondary button--lg" to="/modbus/">
-            Modbus TCP
+          <Link className="button button--secondary button--lg" to="/introduction">
+            Get Started
           </Link>
-          <Link className="button button--secondary button--lg" to="/opcua/">
-            OPC UA
+          <Link className="button button--secondary button--lg" to="/drivers/">
+            Drivers
           </Link>
-          <Link className="button button--secondary button--lg" to="/mqtt/">
-            MQTT
-          </Link>
-          <Link className="button button--secondary button--lg" to="/s7/">
-            S7
-          </Link>
-          <Link className="button button--secondary button--lg" to="/bacnet/">
-            BACnet
-          </Link>
-          <Link className="button button--secondary button--lg" to="/snmp/">
-            SNMP
+          <Link className="button button--secondary button--lg" to="/api">
+            API Reference
           </Link>
         </div>
       </div>
@@ -41,20 +32,82 @@ function HomepageHeader() {
   );
 }
 
-type FeatureItem = {
+type SectionItem = {
   title: string;
   description: ReactNode;
   link: string;
 };
 
-const FeatureList: FeatureItem[] = [
+const PlatformSections: SectionItem[] = [
+  {
+    title: 'Architecture',
+    description: (
+      <>
+        Layered Go backend with React frontend, PostgreSQL storage,
+        WebSocket real-time updates, and pluggable historian backends.
+      </>
+    ),
+    link: '/architecture',
+  },
+  {
+    title: 'Devices',
+    description: (
+      <>
+        Connect to PLCs and industrial equipment via 6 protocol drivers.
+        Automatic polling, reconnection, and address space browsing.
+      </>
+    ),
+    link: '/devices',
+  },
+  {
+    title: 'Alarms',
+    description: (
+      <>
+        Threshold, deviation, boolean, and string-match alarms with deadband,
+        delay, acknowledgment workflows, and notification dispatch.
+      </>
+    ),
+    link: '/alarms',
+  },
+  {
+    title: 'Historian',
+    description: (
+      <>
+        Time-series storage with PostgreSQL or InfluxDB backends.
+        Aggregation queries, retention policies, and per-tag configuration.
+      </>
+    ),
+    link: '/historian',
+  },
+  {
+    title: 'Gateway',
+    description: (
+      <>
+        Connect multiple Edgeo instances together via WebSocket.
+        Sync providers between sites with optional write-through.
+      </>
+    ),
+    link: '/gateway',
+  },
+  {
+    title: 'SVG Graphics',
+    description: (
+      <>
+        Synoptic process diagrams with live tag value bindings.
+        Import SVG files and map elements to real-time data.
+      </>
+    ),
+    link: '/graphics',
+  },
+];
+
+const DriverList: SectionItem[] = [
   {
     title: 'Modbus TCP',
     description: (
       <>
-        Complete Modbus TCP implementation with client, server, and connection pool.
-        Supports all standard Modbus functions (FC01-FC17) with automatic reconnection
-        and built-in metrics.
+        Complete Modbus TCP with client, server, and connection pool.
+        All standard Modbus functions (FC01-FC17).
       </>
     ),
     link: '/modbus/',
@@ -63,8 +116,8 @@ const FeatureList: FeatureItem[] = [
     title: 'OPC UA',
     description: (
       <>
-        Full OPC UA client and server with session management, subscriptions,
-        and monitored items. Supports multiple security policies and authentication methods.
+        Full OPC UA client and server with session management,
+        subscriptions, and security policies.
       </>
     ),
     link: '/opcua/',
@@ -73,9 +126,8 @@ const FeatureList: FeatureItem[] = [
     title: 'MQTT',
     description: (
       <>
-        Pure Go MQTT 5.0 client with TLS, WebSocket, and connection pooling.
-        Supports all QoS levels, topic wildcards, and automatic reconnection with
-        exponential backoff.
+        Pure Go MQTT 5.0 client with TLS, WebSocket,
+        connection pooling, and all QoS levels.
       </>
     ),
     link: '/mqtt/',
@@ -84,8 +136,8 @@ const FeatureList: FeatureItem[] = [
     title: 'S7 (Siemens)',
     description: (
       <>
-        Full S7comm protocol implementation for Siemens PLCs. Supports S7-200, S7-300,
-        S7-400, S7-1200, S7-1500, and LOGO! with connection pooling and multi-item operations.
+        S7comm for Siemens PLCs. S7-200 through S7-1500
+        and LOGO! with connection pooling.
       </>
     ),
     link: '/s7/',
@@ -94,9 +146,8 @@ const FeatureList: FeatureItem[] = [
     title: 'BACnet',
     description: (
       <>
-        Pure Go BACnet/IP client for building automation systems. Device discovery,
-        ReadProperty, WriteProperty, and COV subscriptions with BBMD support for
-        cross-subnet communication.
+        BACnet/IP for building automation. Device discovery,
+        ReadProperty, WriteProperty, and COV subscriptions.
       </>
     ),
     link: '/bacnet/',
@@ -105,15 +156,15 @@ const FeatureList: FeatureItem[] = [
     title: 'SNMP',
     description: (
       <>
-        Complete SNMP v1/v2c/v3 client with trap listener support. SNMPv3 authentication
-        (SHA-256/512) and encryption (AES-256), connection pooling, and MIB walk operations.
+        SNMP v1/v2c/v3 with trap listener. SNMPv3 auth
+        and encryption, MIB walk operations.
       </>
     ),
     link: '/snmp/',
   },
 ];
 
-function Feature({title, description, link}: FeatureItem) {
+function SectionCard({title, description, link}: SectionItem) {
   return (
     <div className={clsx('col col--4')}>
       <div className="text--center padding-horiz--md" style={{marginBottom: '2rem'}}>
@@ -127,13 +178,33 @@ function Feature({title, description, link}: FeatureItem) {
   );
 }
 
-function HomepageFeatures(): ReactNode {
+function PlatformFeatures(): ReactNode {
   return (
     <section className={styles.features}>
       <div className="container">
+        <Heading as="h2" className="text--center" style={{marginBottom: '2rem'}}>
+          Platform
+        </Heading>
         <div className="row">
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
+          {PlatformSections.map((props, idx) => (
+            <SectionCard key={idx} {...props} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DriversSection(): ReactNode {
+  return (
+    <section className={styles.features}>
+      <div className="container">
+        <Heading as="h2" className="text--center" style={{marginBottom: '2rem'}}>
+          Drivers
+        </Heading>
+        <div className="row">
+          {DriverList.map((props, idx) => (
+            <SectionCard key={idx} {...props} />
           ))}
         </div>
       </div>
@@ -142,14 +213,14 @@ function HomepageFeatures(): ReactNode {
 }
 
 export default function Home(): ReactNode {
-  const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title="Industrial Protocol Drivers"
-      description="Multi-protocol industrial communication drivers for Go - Modbus TCP, OPC UA, MQTT, S7, BACnet, and SNMP">
+      title="Industrial SCADA Platform"
+      description="Open-source SCADA platform for industrial automation — Modbus TCP, OPC UA, MQTT, S7, BACnet, and SNMP">
       <HomepageHeader />
       <main>
-        <HomepageFeatures />
+        <PlatformFeatures />
+        <DriversSection />
       </main>
     </Layout>
   );

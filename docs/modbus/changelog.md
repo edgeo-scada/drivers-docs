@@ -60,7 +60,7 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 ### Accessing the Version
 
 ```go
-import "github.com/edgeo-scada/modbus-tcp/modbus"
+import "github.com/edgeo-scada/drivers/modbus"
 
 // Version string
 fmt.Println(modbus.Version) // "1.0.0"

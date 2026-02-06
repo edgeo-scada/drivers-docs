@@ -73,7 +73,7 @@ This project uses [Semantic Versioning](https://semver.org/):
 ### Accessing the Version
 
 ```go
-import "github.com/edgeo-scada/s7/s7"
+import "github.com/edgeo-scada/drivers/s7"
 
 // Version string
 fmt.Println(s7.Version) // "1.0.0"

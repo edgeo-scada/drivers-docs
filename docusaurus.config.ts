@@ -3,8 +3,8 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Edgeo Drivers',
-  tagline: 'Multi-protocol industrial communication drivers for Go',
+  title: 'Edgeo SCADA',
+  tagline: 'Open-source SCADA platform for industrial automation',
   favicon: 'favicon.ico',
 
   future: {
@@ -12,10 +12,10 @@ const config: Config = {
   },
 
   url: 'https://edgeo.github.io',
-  baseUrl: '/drivers/',
+  baseUrl: '/',
 
   organizationName: 'edgeo',
-  projectName: 'drivers',
+  projectName: 'docs',
 
   onBrokenLinks: 'throw',
 
@@ -37,7 +37,7 @@ const config: Config = {
         docs: {
           routeBasePath: '/',
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/edgeo-scada/drivers-docs/tree/main/',
+          editUrl: 'https://github.com/edgeo-scada/docs/tree/main/',
         },
         blog: false,
         theme: {
@@ -53,7 +53,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Edgeo Drivers',
+      title: 'Edgeo SCADA',
       logo: {
         alt: 'Edgeo Logo',
         src: 'img/logo.svg',
@@ -61,42 +61,49 @@ const config: Config = {
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'modbusSidebar',
+          sidebarId: 'scadaSidebar',
           position: 'left',
-          label: 'Modbus TCP',
+          label: 'Documentation',
         },
         {
-          type: 'docSidebar',
-          sidebarId: 'opcuaSidebar',
+          type: 'dropdown',
+          label: 'Drivers',
           position: 'left',
-          label: 'OPC UA',
+          items: [
+            {
+              type: 'docSidebar',
+              sidebarId: 'modbusSidebar',
+              label: 'Modbus TCP',
+            },
+            {
+              type: 'docSidebar',
+              sidebarId: 'opcuaSidebar',
+              label: 'OPC UA',
+            },
+            {
+              type: 'docSidebar',
+              sidebarId: 'mqttSidebar',
+              label: 'MQTT',
+            },
+            {
+              type: 'docSidebar',
+              sidebarId: 's7Sidebar',
+              label: 'S7',
+            },
+            {
+              type: 'docSidebar',
+              sidebarId: 'bacnetSidebar',
+              label: 'BACnet',
+            },
+            {
+              type: 'docSidebar',
+              sidebarId: 'snmpSidebar',
+              label: 'SNMP',
+            },
+          ],
         },
         {
-          type: 'docSidebar',
-          sidebarId: 'mqttSidebar',
-          position: 'left',
-          label: 'MQTT',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 's7Sidebar',
-          position: 'left',
-          label: 'S7',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'bacnetSidebar',
-          position: 'left',
-          label: 'BACnet',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'snmpSidebar',
-          position: 'left',
-          label: 'SNMP',
-        },
-        {
-          href: 'https://github.com/edgeo-scada/drivers-docs',
+          href: 'https://github.com/edgeo-scada',
           label: 'GitHub',
           position: 'right',
         },
@@ -106,7 +113,65 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Documentation',
+          title: 'Platform',
+          items: [
+            {
+              label: 'Introduction',
+              to: '/introduction',
+            },
+            {
+              label: 'Architecture',
+              to: '/architecture',
+            },
+            {
+              label: 'Installation',
+              to: '/installation',
+            },
+            {
+              label: 'Configuration',
+              to: '/configuration',
+            },
+            {
+              label: 'API Reference',
+              to: '/api',
+            },
+            {
+              label: 'CLI',
+              to: '/cli',
+            },
+          ],
+        },
+        {
+          title: 'Components',
+          items: [
+            {
+              label: 'Devices',
+              to: '/devices',
+            },
+            {
+              label: 'Alarms',
+              to: '/alarms',
+            },
+            {
+              label: 'Historian',
+              to: '/historian',
+            },
+            {
+              label: 'Notifications',
+              to: '/notifications',
+            },
+            {
+              label: 'Gateway',
+              to: '/gateway',
+            },
+            {
+              label: 'SVG Graphics',
+              to: '/graphics',
+            },
+          ],
+        },
+        {
+          title: 'Drivers',
           items: [
             {
               label: 'Modbus TCP',
@@ -139,7 +204,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/edgeo-scada/drivers-docs',
+              href: 'https://github.com/edgeo-scada',
             },
           ],
         },
@@ -149,7 +214,7 @@ const config: Config = {
     prism: {
       theme: prismThemes.github,
       darkTheme: prismThemes.dracula,
-      additionalLanguages: ['go', 'bash'],
+      additionalLanguages: ['go', 'bash', 'yaml', 'json'],
     },
   } satisfies Preset.ThemeConfig,
 };

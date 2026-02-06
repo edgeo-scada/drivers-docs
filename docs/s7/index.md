@@ -2,21 +2,21 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/s7/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/s7)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/drivers/s7/blob/main/LICENSE)
+[![GitHub](https://img.shields.io/badge/github-repo-black.svg?logo=github)](https://github.com/edgeo-scada/drivers/s7)
 
 A complete Go implementation of the Siemens S7 protocol (S7comm), with client, connection pool, and CLI tool.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/s7/s7@v1.0.0
+go get github.com/edgeo-scada/drivers/s7@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo-scada/s7/s7"
+import "github.com/edgeo-scada/drivers/s7"
 
 func main() {
     fmt.Printf("S7 driver version: %s\n", s7.Version)
@@ -67,7 +67,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/edgeo-scada/s7/s7"
+    "github.com/edgeo-scada/drivers/s7"
 )
 
 func main() {

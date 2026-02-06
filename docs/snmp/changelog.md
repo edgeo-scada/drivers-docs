@@ -94,4 +94,4 @@ Ce projet suit le [Semantic Versioning](https://semver.org/):
 
 - [Documentation](index.md)
 - [Démarrage rapide](getting-started.md)
-- [GitHub Repository](https://github.com/edgeo-scada/snmp)
+- [GitHub Repository](https://github.com/edgeo-scada/drivers/snmp)

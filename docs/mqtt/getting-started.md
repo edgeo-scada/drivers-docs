@@ -10,7 +10,7 @@ Quick start guide for the MQTT library.
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/mqtt
+go get github.com/edgeo-scada/drivers/mqtt
 ```
 
 ## First Client
@@ -25,7 +25,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo-scada/mqtt/mqtt"
+    "github.com/edgeo-scada/drivers/mqtt"
 )
 
 func main() {
@@ -72,7 +72,7 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo-scada/mqtt/mqtt"
+    "github.com/edgeo-scada/drivers/mqtt"
 )
 
 func main() {
