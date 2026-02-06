@@ -1,422 +1,377 @@
-# Client API
+---
+slug: /snmp/client
+---
 
-Complete documentation of the SNMP client API.
+# Client SNMP
 
-## Client Creation
+Le client SNMP est le composant principal pour interagir avec les agents SNMP.
 
-### NewClient
+## Création du client
 
-Creates a new SNMP client instance.
-
-```go
-func NewClient(opts ...Option) *Client
-```
-
-**Example:**
+### Client SNMPv1
 
 ```go
-// SNMPv2c client
-client := snmp.NewClient(
-    snmp.WithTarget("192.168.1.1"),
-    snmp.WithVersion(snmp.Version2c),
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
+    snmp.WithVersion(snmp.Version1),
     snmp.WithCommunity("public"),
 )
+```
 
-// SNMPv3 client
-client := snmp.NewClient(
-    snmp.WithTarget("192.168.1.1"),
-    snmp.WithVersion(snmp.Version3),
-    snmp.WithSecurityLevel(snmp.AuthPriv),
-    snmp.WithSecurityName("admin"),
-    snmp.WithAuth(snmp.AuthSHA256, "authpass"),
-    snmp.WithPrivacy(snmp.PrivAES256, "privpass"),
+### Client SNMPv2c
+
+```go
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
+    snmp.WithVersion(snmp.Version2c),
+    snmp.WithCommunity("public"),
+    snmp.WithTimeout(5*time.Second),
+    snmp.WithRetries(3),
 )
 ```
 
-## Connection Methods
-
-### Connect
-
-Establishes connection to the SNMP agent.
+### Client SNMPv3
 
 ```go
-func (c *Client) Connect(ctx context.Context) error
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
+    snmp.WithVersion(snmp.Version3),
+    snmp.WithSecurityName("admin"),
+    snmp.WithAuthProtocol(snmp.AuthSHA),
+    snmp.WithAuthPassword("authpass"),
+    snmp.WithPrivProtocol(snmp.PrivAES),
+    snmp.WithPrivPassword("privpass"),
+    snmp.WithSecurityLevel(snmp.AuthPriv),
+)
 ```
 
-**Example:**
-
-```go
-ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-defer cancel()
-
-if err := client.Connect(ctx); err != nil {
-    log.Fatalf("Connection failed: %v", err)
-}
-```
-
-### Close
-
-Closes the connection.
-
-```go
-func (c *Client) Close() error
-```
-
-## GET Operations
+## Opérations SNMP
 
 ### Get
 
-Retrieves values for one or more OIDs.
+Récupère la valeur d'un ou plusieurs OIDs spécifiques.
 
 ```go
-func (c *Client) Get(ctx context.Context, oids ...string) ([]VarBind, error)
-```
-
-**Example:**
-
-```go
-// Single OID
-result, err := client.Get(ctx, "1.3.6.1.2.1.1.1.0")
+// GET simple
+vars, err := client.Get(ctx, snmp.OIDSysDescr)
 if err != nil {
-    log.Fatal(err)
+    return err
 }
-log.Printf("System: %s", result[0].Value)
+fmt.Printf("Description: %s\n", vars[0].Value)
 
-// Multiple OIDs
-result, err := client.Get(ctx,
+// GET multiple
+vars, err := client.Get(ctx,
     snmp.OIDSysDescr,
     snmp.OIDSysName,
     snmp.OIDSysUpTime,
     snmp.OIDSysContact,
 )
 if err != nil {
-    log.Fatal(err)
+    return err
 }
 
-for _, vb := range result {
-    log.Printf("%s = %v", vb.OID, vb.Value)
+for _, v := range vars {
+    fmt.Printf("%s = %v\n", v.OID, v.Value)
 }
 ```
 
 ### GetNext
 
-Retrieves the next OID(s) in the MIB tree.
+Récupère l'OID suivant dans l'arbre MIB.
 
 ```go
-func (c *Client) GetNext(ctx context.Context, oids ...string) ([]VarBind, error)
-```
-
-**Example:**
-
-```go
-// Get next after system
-result, err := client.GetNext(ctx, "1.3.6.1.2.1.1")
-log.Printf("Next: %s = %v", result[0].OID, result[0].Value)
-```
-
-### GetBulk
-
-Efficiently retrieves multiple OIDs (SNMPv2c/v3 only).
-
-```go
-func (c *Client) GetBulk(ctx context.Context, nonRepeaters, maxRepetitions int, oids ...string) ([]VarBind, error)
-```
-
-**Parameters:**
-- `nonRepeaters` - Number of OIDs that should not be repeated
-- `maxRepetitions` - Maximum iterations for remaining OIDs
-
-**Example:**
-
-```go
-// Get interface descriptions (up to 20)
-result, err := client.GetBulk(ctx, 0, 20, "1.3.6.1.2.1.2.2.1.2")
+// GET-NEXT simple
+vars, err := client.GetNext(ctx, snmp.OIDSysDescr)
 if err != nil {
-    log.Fatal(err)
+    return err
 }
+// Retourne sysObjectID (1.3.6.1.2.1.1.2.0)
 
-for _, vb := range result {
-    log.Printf("Interface: %s", vb.Value)
-}
+// GET-NEXT multiple
+vars, err := client.GetNext(ctx, oid1, oid2, oid3)
 ```
 
-## WALK Operations
+### GetBulk (v2c/v3 uniquement)
 
-### Walk
-
-Traverses a MIB subtree and returns all results.
+Récupère plusieurs OIDs en une seule requête, plus efficace que des GET-NEXT répétés.
 
 ```go
-func (c *Client) Walk(ctx context.Context, rootOID string) ([]VarBind, error)
-```
+// Paramètres:
+// - nonRepeaters: nombre d'OIDs à traiter comme des GET-NEXT simples
+// - maxRepetitions: nombre maximum de répétitions pour les OIDs restants
 
-**Example:**
-
-```go
-// Walk interfaces table
-results, err := client.Walk(ctx, "1.3.6.1.2.1.2.2")
+vars, err := client.GetBulk(ctx, 0, 25, rootOID)
 if err != nil {
-    log.Fatal(err)
+    return err
 }
 
-for _, vb := range results {
-    log.Printf("%s = %v", vb.OID, vb.Value)
+for _, v := range vars {
+    fmt.Printf("%s = %v\n", v.OID, v.Value)
 }
 ```
-
-### WalkFunc
-
-Traverses a MIB subtree with a callback function.
-
-```go
-func (c *Client) WalkFunc(ctx context.Context, rootOID string, fn WalkFunc) error
-
-type WalkFunc func(vb VarBind) error
-```
-
-**Example:**
-
-```go
-// Walk with callback
-err := client.WalkFunc(ctx, "1.3.6.1.2.1.2.2.1.2", func(vb snmp.VarBind) error {
-    log.Printf("Interface: %s", vb.Value)
-    return nil
-})
-
-// Stop walk early by returning error
-count := 0
-err := client.WalkFunc(ctx, "1.3.6.1.2.1.2.2", func(vb snmp.VarBind) error {
-    count++
-    if count >= 10 {
-        return snmp.ErrWalkStop // Stop after 10 results
-    }
-    log.Printf("%s = %v", vb.OID, vb.Value)
-    return nil
-})
-```
-
-## SET Operations
 
 ### Set
 
-Modifies one or more OID values.
+Modifie la valeur d'un ou plusieurs OIDs.
 
 ```go
-func (c *Client) Set(ctx context.Context, varbinds ...VarBind) error
-```
-
-**VarBind structure:**
-
-```go
-type VarBind struct {
-    OID   string
-    Type  Type
-    Value interface{}
-}
-```
-
-**Example:**
-
-```go
-// Set single value
-err := client.Set(ctx, snmp.VarBind{
+// SET simple
+result, err := client.Set(ctx, snmp.Variable{
     OID:   snmp.OIDSysContact,
     Type:  snmp.TypeOctetString,
-    Value: "admin@example.com",
+    Value: []byte("admin@example.com"),
 })
+if err != nil {
+    return err
+}
 
-// Set multiple values
-err := client.Set(ctx,
-    snmp.VarBind{
+// SET multiple
+result, err := client.Set(ctx,
+    snmp.Variable{
         OID:   snmp.OIDSysContact,
         Type:  snmp.TypeOctetString,
-        Value: "admin@example.com",
+        Value: []byte("admin@example.com"),
     },
-    snmp.VarBind{
-        OID:   snmp.OIDSysLocation,
+    snmp.Variable{
+        OID:   snmp.OIDSysName,
         Type:  snmp.TypeOctetString,
-        Value: "Data Center",
+        Value: []byte("switch-01"),
     },
 )
+```
 
-// Set integer value
-err := client.Set(ctx, snmp.VarBind{
-    OID:   "1.3.6.1.4.1.9.2.1.55.192.168.1.1",
-    Type:  snmp.TypeInteger,
-    Value: int32(1),
+### Walk
+
+Parcourt un sous-arbre de la MIB.
+
+```go
+// Walk avec fonction callback
+rootOID, _ := snmp.ParseOID("1.3.6.1.2.1.2.2") // ifTable
+
+err := client.WalkFunc(ctx, rootOID, func(v snmp.Variable) error {
+    fmt.Printf("%s = %v\n", v.OID, v.Value)
+    return nil // retourner une erreur arrête le walk
+})
+if err != nil {
+    return err
+}
+```
+
+Pour v2c/v3, le walk utilise automatiquement GET-BULK pour de meilleures performances.
+
+## Types de données SNMP
+
+### Types supportés
+
+| Type | Constante | Description |
+|------|-----------|-------------|
+| INTEGER | `TypeInteger` | Entier signé 32 bits |
+| OCTET STRING | `TypeOctetString` | Chaîne d'octets |
+| NULL | `TypeNull` | Valeur nulle |
+| OBJECT IDENTIFIER | `TypeObjectIdentifier` | OID |
+| IP Address | `TypeIPAddress` | Adresse IPv4 |
+| Counter32 | `TypeCounter32` | Compteur 32 bits (non signé, wrap à 2^32) |
+| Gauge32 | `TypeGauge32` | Jauge 32 bits (non signé, max 2^32-1) |
+| TimeTicks | `TypeTimeTicks` | Centièmes de seconde |
+| Counter64 | `TypeCounter64` | Compteur 64 bits (v2c/v3 uniquement) |
+| NoSuchObject | `TypeNoSuchObject` | OID existe mais pas d'instance |
+| NoSuchInstance | `TypeNoSuchInstance` | Instance n'existe pas |
+| EndOfMibView | `TypeEndOfMibView` | Fin de la vue MIB |
+
+### Manipulation des valeurs
+
+```go
+// INTEGER
+if val, ok := v.Value.(int); ok {
+    fmt.Printf("Integer: %d\n", val)
+}
+
+// OCTET STRING
+if val, ok := v.Value.([]byte); ok {
+    fmt.Printf("String: %s\n", string(val))
+}
+
+// IP Address
+if val, ok := v.Value.(net.IP); ok {
+    fmt.Printf("IP: %s\n", val.String())
+}
+
+// Counter32/Gauge32/TimeTicks
+if val, ok := v.Value.(uint32); ok {
+    fmt.Printf("Counter: %d\n", val)
+}
+
+// Counter64
+if val, ok := v.Value.(uint64); ok {
+    fmt.Printf("Counter64: %d\n", val)
+}
+
+// OBJECT IDENTIFIER
+if val, ok := v.Value.(snmp.OID); ok {
+    fmt.Printf("OID: %s\n", val.String())
+}
+```
+
+### Conversion TimeTicks
+
+```go
+// Convertir TimeTicks en chaîne lisible
+if ticks, ok := v.Value.(uint32); ok {
+    str := snmp.TimeTicksToString(ticks)
+    fmt.Printf("Uptime: %s\n", str) // "5 days, 12:34:56.78"
+}
+```
+
+## OIDs prédéfinis
+
+### System MIB (1.3.6.1.2.1.1)
+
+```go
+snmp.OIDSysDescr     // 1.3.6.1.2.1.1.1.0 - Description système
+snmp.OIDSysObjectID  // 1.3.6.1.2.1.1.2.0 - Object ID système
+snmp.OIDSysUpTime    // 1.3.6.1.2.1.1.3.0 - Uptime (TimeTicks)
+snmp.OIDSysContact   // 1.3.6.1.2.1.1.4.0 - Contact administrateur
+snmp.OIDSysName      // 1.3.6.1.2.1.1.5.0 - Nom système
+snmp.OIDSysLocation  // 1.3.6.1.2.1.1.6.0 - Localisation physique
+snmp.OIDSysServices  // 1.3.6.1.2.1.1.7.0 - Services disponibles
+```
+
+### Parsing d'OIDs
+
+```go
+// Parser un OID depuis une chaîne
+oid, err := snmp.ParseOID("1.3.6.1.4.1.9.2.1.55.0")
+if err != nil {
+    return err
+}
+
+// Vérifier si un OID est préfixe d'un autre
+if rootOID.IsPrefix(childOID) {
+    fmt.Println("childOID est sous rootOID")
+}
+
+// Comparer des OIDs
+if oid1.Equal(oid2) {
+    fmt.Println("OIDs identiques")
+}
+
+// Convertir en chaîne
+str := oid.String() // "1.3.6.1.2.1.1.1.0"
+```
+
+## Options du client
+
+### Réseau
+
+```go
+snmp.WithTarget("192.168.1.1:161")  // Adresse cible
+snmp.WithTimeout(5*time.Second)     // Timeout par requête
+snmp.WithRetries(3)                 // Nombre de tentatives
+```
+
+### Authentification v1/v2c
+
+```go
+snmp.WithVersion(snmp.Version2c)    // Version SNMP
+snmp.WithCommunity("public")        // Community string
+```
+
+### Authentification v3
+
+```go
+snmp.WithSecurityName("admin")           // Nom d'utilisateur USM
+snmp.WithSecurityLevel(snmp.AuthPriv)    // Niveau de sécurité
+snmp.WithAuthProtocol(snmp.AuthSHA)      // Protocole d'authentification
+snmp.WithAuthPassword("authpass")        // Mot de passe d'authentification
+snmp.WithPrivProtocol(snmp.PrivAES)      // Protocole de chiffrement
+snmp.WithPrivPassword("privpass")        // Mot de passe de chiffrement
+snmp.WithContextName("context")          // Nom de contexte (optionnel)
+snmp.WithContextEngineID("engineid")     // Engine ID de contexte (optionnel)
+```
+
+### Performance
+
+```go
+snmp.WithMaxRepetitions(25)    // Max repetitions pour GET-BULK
+snmp.WithMaxOIDsPerRequest(10) // Max OIDs par requête
+```
+
+## Gestion des connexions
+
+### Fermeture du client
+
+```go
+client, err := snmp.NewClient(ctx, opts...)
+if err != nil {
+    return err
+}
+defer client.Close() // Toujours fermer le client
+
+// Utilisation...
+```
+
+### Vérification de l'état
+
+```go
+// Vérifier si le client est connecté
+if client.IsConnected() {
+    // Client prêt
+}
+
+// Obtenir les options actuelles
+opts := client.Options()
+fmt.Printf("Target: %s\n", opts.Target)
+fmt.Printf("Version: %s\n", opts.Version)
+```
+
+## Bonnes pratiques
+
+### Réutilisation du client
+
+```go
+// ✅ Bon - réutiliser le client
+client, _ := snmp.NewClient(ctx, opts...)
+defer client.Close()
+
+for _, device := range devices {
+    vars, _ := client.Get(ctx, oid)
+    // ...
+}
+
+// ❌ Mauvais - créer un client par requête
+for _, device := range devices {
+    client, _ := snmp.NewClient(ctx, opts...)
+    vars, _ := client.Get(ctx, oid)
+    client.Close()
+}
+```
+
+### Gestion du contexte
+
+```go
+// Timeout global
+ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+defer cancel()
+
+client, _ := snmp.NewClient(ctx, opts...)
+vars, err := client.Get(ctx, oids...)
+```
+
+### Walk de grandes tables
+
+```go
+// Pour de grandes tables, utiliser WalkFunc avec traitement streaming
+err := client.WalkFunc(ctx, rootOID, func(v snmp.Variable) error {
+    // Traiter chaque variable immédiatement
+    if err := processVariable(v); err != nil {
+        return err // Arrêter le walk en cas d'erreur
+    }
+    return nil
 })
 ```
 
-## Data Types
+## Voir aussi
 
-### VarBind
-
-Represents an OID-value pair.
-
-```go
-type VarBind struct {
-    OID   string      // Object identifier
-    Type  Type        // ASN.1 type
-    Value interface{} // Value (type depends on Type)
-}
-```
-
-### SNMP Types
-
-```go
-const (
-    TypeInteger          Type = 0x02
-    TypeBitString        Type = 0x03
-    TypeOctetString      Type = 0x04
-    TypeNull             Type = 0x05
-    TypeObjectIdentifier Type = 0x06
-    TypeIPAddress        Type = 0x40
-    TypeCounter32        Type = 0x41
-    TypeGauge32          Type = 0x42
-    TypeTimeTicks        Type = 0x43
-    TypeOpaque           Type = 0x44
-    TypeCounter64        Type = 0x46
-    TypeNoSuchObject     Type = 0x80
-    TypeNoSuchInstance   Type = 0x81
-    TypeEndOfMibView     Type = 0x82
-)
-```
-
-### Value Type Mapping
-
-| SNMP Type | Go Type |
-|-----------|---------|
-| Integer | `int32` |
-| OctetString | `[]byte` or `string` |
-| ObjectIdentifier | `string` |
-| IPAddress | `net.IP` |
-| Counter32 | `uint32` |
-| Gauge32 | `uint32` |
-| TimeTicks | `uint32` |
-| Counter64 | `uint64` |
-
-## SNMP Versions
-
-```go
-const (
-    Version1  Version = 0
-    Version2c Version = 1
-    Version3  Version = 3
-)
-```
-
-## SNMPv3 Security
-
-### Security Levels
-
-```go
-const (
-    NoAuthNoPriv SecurityLevel = 1 // No authentication, no encryption
-    AuthNoPriv   SecurityLevel = 2 // Authentication only
-    AuthPriv     SecurityLevel = 3 // Authentication and encryption
-)
-```
-
-### Authentication Protocols
-
-```go
-const (
-    AuthNone   AuthProtocol = iota
-    AuthMD5
-    AuthSHA
-    AuthSHA224
-    AuthSHA256
-    AuthSHA384
-    AuthSHA512
-)
-```
-
-### Privacy Protocols
-
-```go
-const (
-    PrivNone    PrivProtocol = iota
-    PrivDES
-    PrivAES
-    PrivAES192
-    PrivAES256
-    PrivAES192C  // Cisco variant
-    PrivAES256C  // Cisco variant
-)
-```
-
-## Metrics
-
-### Metrics
-
-Returns client metrics.
-
-```go
-func (c *Client) Metrics() *Metrics
-```
-
-**Example:**
-
-```go
-metrics := client.Metrics()
-snapshot := metrics.Snapshot()
-
-log.Printf("Requests sent: %d", snapshot.RequestsSent)
-log.Printf("Requests succeeded: %d", snapshot.RequestsSucceeded)
-log.Printf("Avg latency: %v", snapshot.AvgLatency)
-```
-
-## Complete Example
-
-```go
-package main
-
-import (
-    "context"
-    "log"
-    "time"
-
-    "github.com/edgeo/drivers/snmp/snmp"
-)
-
-func main() {
-    // Create SNMPv2c client
-    client := snmp.NewClient(
-        snmp.WithTarget("192.168.1.1"),
-        snmp.WithVersion(snmp.Version2c),
-        snmp.WithCommunity("public"),
-        snmp.WithTimeout(5*time.Second),
-        snmp.WithRetries(3),
-    )
-
-    ctx := context.Background()
-    if err := client.Connect(ctx); err != nil {
-        log.Fatal(err)
-    }
-    defer client.Close()
-
-    // Get system information
-    result, err := client.Get(ctx,
-        snmp.OIDSysDescr,
-        snmp.OIDSysName,
-        snmp.OIDSysUpTime,
-    )
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    log.Printf("System: %s", result[0].Value)
-    log.Printf("Name: %s", result[1].Value)
-    log.Printf("Uptime: %d ticks", result[2].Value)
-
-    // Walk interfaces
-    log.Println("\nInterfaces:")
-    err = client.WalkFunc(ctx, "1.3.6.1.2.1.2.2.1.2", func(vb snmp.VarBind) error {
-        log.Printf("  %s", vb.Value)
-        return nil
-    })
-    if err != nil {
-        log.Printf("Walk error: %v", err)
-    }
-}
-```
+- [Options de configuration](options.md)
+- [Gestion des erreurs](errors.md)
+- [Pool de connexions](pool.md)

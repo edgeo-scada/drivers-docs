@@ -1,27 +1,25 @@
 ---
-sidebar_position: 1
-slug: /s7/
+slug: /
 ---
 
-# S7 Client Library
+# S7 Protocol Driver
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/s7/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fs7-181717?logo=github)](https://github.com/edgeo-scada/s7)
 
-Pure Go implementation of the Siemens S7 communication protocol (S7comm) for industrial PLCs.
+A complete Go implementation of the Siemens S7 protocol (S7comm), with client, connection pool, and CLI tool.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/s7@v1.0.0
+go get github.com/edgeo-scada/s7/s7@v1.0.0
 ```
 
 To verify the installed version:
 
 ```go
-import "github.com/edgeo-scada/s7"
+import "github.com/edgeo-scada/s7/s7"
 
 func main() {
     fmt.Printf("S7 driver version: %s\n", s7.Version)
@@ -29,43 +27,38 @@ func main() {
 }
 ```
 
-## Supported PLCs
-
-- **S7-200** - Compact PLCs
-- **S7-200 Smart** - Enhanced compact PLCs
-- **S7-300** - Modular PLCs
-- **S7-400** - High-end modular PLCs
-- **S7-1200** - Compact controller
-- **S7-1500** - Advanced controller
-- **LOGO!** - Logic modules
-
 ## Features
 
-### Protocol Support
-- Full S7comm protocol implementation
-- COTP (Connection Oriented Transport Protocol)
-- TCP/IP transport on port 102
-- Automatic PDU negotiation
+- **S7comm TCP client** with automatic reconnection
+- **Connection pool** with health checks
+- **Read/write** for all memory areas (DB, I, Q, M, T, C)
+- **Data types**: Byte, Int, DInt, Real, LReal, String, Bool
+- **Built-in metrics** (latency, counters, histograms)
+- **Structured logging** via `slog`
+- **Complete CLI tool** for interacting with PLCs
 
-### Memory Areas
-- **DB** - Data Blocks (DBx.DBBn, DBx.DBWn, DBx.DBDn)
-- **I** - Process Inputs (IBn, IWn, IDn)
-- **Q** - Process Outputs (QBn, QWn, QDn)
-- **M** - Markers/Flags (MBn, MWn, MDn)
-- **T** - Timers (Tn)
-- **C** - Counters (Cn)
+## Supported PLCs
 
-### Data Types
-- Byte, Int (16-bit signed), UInt (16-bit unsigned)
-- DInt (32-bit signed), UDInt (32-bit unsigned)
-- Real (32-bit float), LReal (64-bit float)
-- Bool, String (variable length)
+| Model | Rack | Slot |
+|-------|------|------|
+| S7-200 | 0 | 1 |
+| S7-200 Smart | 0 | 1 |
+| S7-300 | 0 | 1-2 |
+| S7-400 | 0 | 1-2 |
+| S7-1200 | 0 | 0-1 |
+| S7-1500 | 0 | 0-1 |
+| LOGO! | 0 | 1 |
 
-### Advanced Features
-- Connection pooling for high-throughput applications
-- Automatic reconnection with exponential backoff
-- Multi-item read/write operations
-- Built-in metrics and performance tracking
+## Memory Areas
+
+| Area | Code | Description | S7 Notation |
+|------|------|-------------|-------------|
+| DB | 0x84 | Data blocks | DBx.DBBn, DBx.DBWn, DBx.DBDn |
+| I (PE) | 0x81 | Process inputs | IBn, IWn, IDn |
+| Q (PA) | 0x82 | Process outputs | QBn, QWn, QDn |
+| M (MK) | 0x83 | Markers/Flags | MBn, MWn, MDn |
+| T (TM) | 0x1D | Timers | Tn |
+| C (CT) | 0x1C | Counters | Cn |
 
 ## Quick Example
 
@@ -74,75 +67,71 @@ package main
 
 import (
     "context"
-    "log"
+    "fmt"
+    "time"
 
-    "github.com/edgeo-scada/s7"
+    "github.com/edgeo-scada/s7/s7"
 )
 
 func main() {
-    // Create the client
-    client := s7.NewClient(
-        "192.168.1.10",
+    // Create a client
+    client, err := s7.NewClient("192.168.1.100:102",
         s7.WithRack(0),
         s7.WithSlot(1),
+        s7.WithTimeout(5*time.Second),
     )
-
-    // Connect
-    if err := client.Connect(context.Background()); err != nil {
-        log.Fatal(err)
+    if err != nil {
+        panic(err)
     }
     defer client.Close()
 
-    // Read from Data Block
-    data, err := client.ReadDB(context.Background(), 1, 0, 10) // DB1.DBB0, 10 bytes
-    if err != nil {
-        log.Fatal(err)
+    // Connect
+    ctx := context.Background()
+    if err := client.Connect(ctx); err != nil {
+        panic(err)
     }
-    log.Printf("Data: %v", data)
 
-    // Read a float value
-    value, err := client.ReadFloat32(context.Background(), s7.AreaDB, 1, 100) // DB1.DBD100
+    // Read data from DB1
+    data, err := client.ReadDB(ctx, 1, 0, 10)
     if err != nil {
-        log.Fatal(err)
+        panic(err)
     }
-    log.Printf("Temperature: %.2f", value)
+    fmt.Printf("Data: %v\n", data)
+
+    // Read a typed value (REAL)
+    realVal, err := client.ReadFloat32(ctx, s7.AreaDB, 1, 100)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Temperature: %.2f\n", realVal)
 }
 ```
 
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [Getting Started](getting-started.md) | Quick start guide |
-| [Client](client.md) | S7 client API |
-| [Options](options.md) | Configuration and options |
-| [Pool](pool.md) | Connection pooling |
-| [Errors](errors.md) | Error handling |
-| [Metrics](metrics.md) | Metrics and monitoring |
-| [CLI](cli.md) | edgeo-s7 command-line tool |
-| [Changelog](changelog.md) | Version history |
-
-## Examples
-
-| Example | Description |
-|---------|-------------|
-| [Basic Client](examples/basic-client.md) | Read and write operations |
-| [Connection Pool](examples/pool.md) | High-throughput applications |
-
-## Architecture
+## Package Structure
 
 ```
 s7/
-├── client.go      # Main S7 client
-├── types.go       # Memory areas and constants
-├── protocol.go    # S7comm encoding/decoding
-├── options.go     # Configuration options
-├── pool.go        # Connection pooling
-├── metrics.go     # Metrics
-└── errors.go      # Error handling
+├── client.go      # S7 TCP client
+├── pool.go        # Connection pool
+├── options.go     # Functional configuration
+├── types.go       # Types and constants
+├── errors.go      # Error handling
+├── metrics.go     # Metrics and observability
+├── protocol.go    # Protocol encoding/decoding
+└── version.go     # Version information
 ```
 
-## Compatibility
+## Next Steps
 
-- All S7 PLC series
-- TCP/IP connectivity
+- [Getting Started](./getting-started)
+- [Client Documentation](./client)
+- [Connection Pool](./pool)
+- [Configuration](./options)
+- [Error Handling](./errors)
+- [Metrics](./metrics)
+- [Changelog](./changelog)
+/pool)
+- [Configuration](./options)
+- [Gestion des erreurs](./errors)
+- [Metriques](./metrics)
+- [Changelog](./changelog)

@@ -1,275 +1,295 @@
-# edgeo-bacnet - BACnet Command Line Interface
+# CLI Reference
 
-A complete command-line tool for interacting with BACnet/IP devices.
+The `edgeo-bacnet` command-line tool provides comprehensive BACnet/IP device interaction.
 
 ## Installation
 
 ```bash
-go build -o edgeo-bacnet ./cmd/edgeo-bacnet
+go install github.com/edgeo-scada/bacnet/cmd/edgeo-bacnet@latest
 ```
-
-## Commands Overview
-
-| Command | Description |
-|---------|-------------|
-| `scan` | Discover BACnet devices (WhoIs) |
-| `read` | Read property from object |
-| `write` | Write property to object |
-| `watch` | Monitor property values |
-| `dump` | Dump all objects/properties from device |
-| `info` | Display device information |
-| `interactive` | Interactive REPL shell |
-| `version` | Print version information |
 
 ## Global Flags
 
-### Connection
+These flags apply to all commands:
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
-| `--host` | `-H` | - | Target device IP address |
+| `--config` | | `~/.edgeo-bacnet.yaml` | Config file path |
+| `--host` | `-H` | | Target device IP address |
 | `--port` | `-p` | `47808` | BACnet/IP port |
-| `--device` | `-d` | - | Target device instance ID |
+| `--device` | `-d` | | Target device instance ID |
 | `--timeout` | `-t` | `3s` | Request timeout |
 | `--retries` | | `3` | Number of retries |
+| `--output` | `-o` | `table` | Output format (table, json, csv, raw) |
+| `--verbose` | `-v` | `false` | Enable verbose output |
+| `--local` | | | Local address to bind to |
+| `--bbmd` | | | BBMD address for foreign device |
+| `--bbmd-port` | | `47808` | BBMD port |
+| `--bbmd-ttl` | | `60s` | BBMD registration TTL |
 
-### Network
+## Commands
 
-| Flag | Description |
-|------|-------------|
-| `--local` | Local address to bind to |
-| `--bbmd` | BBMD address for cross-subnet |
+### scan
 
-### Output
-
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `--output` | `-o` | `table` | Format: table, json, csv, raw |
-| `--verbose` | `-v` | `false` | Verbose output |
-
-### Configuration
-
-| Flag | Description |
-|------|-------------|
-| `--config` | Config file path (default: `~/.edgeo-bacnet.yaml`) |
-
-## Command: scan
-
-Discover BACnet devices on the network.
-
-### Usage
+Discover devices on the BACnet network.
 
 ```bash
 edgeo-bacnet scan [flags]
 ```
 
-### Flags
+**Flags:**
 
-| Flag | Description |
-|------|-------------|
-| `--timeout` | Discovery timeout (default: 5s) |
-| `--low` | Minimum device instance ID |
-| `--high` | Maximum device instance ID |
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--low` | `-l` | | Low device ID limit |
+| `--high` | `-h` | | High device ID limit |
+| `--timeout` | `-t` | `5s` | Discovery timeout |
 
-### Examples
+**Examples:**
 
 ```bash
 # Discover all devices
 edgeo-bacnet scan
 
-# Discover with longer timeout
-edgeo-bacnet scan --timeout 10s
-
-# Discover specific range
+# Discover devices in range
 edgeo-bacnet scan --low 1000 --high 2000
+
+# Longer timeout for slow networks
+edgeo-bacnet scan -t 10s
 
 # JSON output
 edgeo-bacnet scan -o json
 ```
 
-## Command: read
+**Output:**
 
-Read property from an object.
+```
+Discovering BACnet devices...
 
-### Usage
+DEVICE ID    ADDRESS            VENDOR ID    MAX APDU
+1234         192.168.1.100      123          1476
+5678         192.168.1.101      456          480
+
+Found 2 device(s)
+```
+
+### read
+
+Read a property from a BACnet object.
 
 ```bash
 edgeo-bacnet read [flags]
 ```
 
-### Flags
+**Flags:**
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--device` | `-d` | Device instance ID (required) |
-| `--object` | | Object identifier (e.g., "ai:0", "ao:1") |
-| `--property` | | Property name or ID (default: present-value) |
-| `--index` | | Array index |
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--device` | `-d` | | Device instance ID (required) |
+| `--object` | `-o` | | Object identifier (required) |
+| `--property` | `-p` | `present-value` | Property identifier |
+| `--index` | `-i` | | Array index |
 
-### Object Identifiers
-
-Format: `type:instance` or `type-instance`
-
-| Type | Abbreviations |
-|------|---------------|
-| Analog Input | `ai`, `analog-input` |
-| Analog Output | `ao`, `analog-output` |
-| Analog Value | `av`, `analog-value` |
-| Binary Input | `bi`, `binary-input` |
-| Binary Output | `bo`, `binary-output` |
-| Binary Value | `bv`, `binary-value` |
-| Multi-State Input | `msi`, `multi-state-input` |
-| Multi-State Output | `mso`, `multi-state-output` |
-| Device | `dev`, `device` |
-
-### Property Names
-
-| Name | Abbreviation |
-|------|--------------|
-| present-value | pv |
-| object-name | name |
-| object-identifier | oid |
-| description | desc |
-| status-flags | sf |
-| units | - |
-| priority-array | pa |
-| relinquish-default | rd |
-
-### Examples
+**Examples:**
 
 ```bash
-# Read present value of AI:0
-edgeo-bacnet read -d 1234 --object ai:0
+# Read present value from analog input
+edgeo-bacnet read -d 1234 -o analog-input:1 -p present-value
+
+# Using aliases
+edgeo-bacnet read -d 1234 -o ai:1 -p pv
 
 # Read object name
-edgeo-bacnet read -d 1234 --object ai:0 --property object-name
+edgeo-bacnet read -d 1234 -o ai:1 -p name
 
-# Read priority array element
-edgeo-bacnet read -d 1234 --object ao:0 --property priority-array --index 8
+# Read array element
+edgeo-bacnet read -d 1234 -o device:1234 -p object-list -i 1
 
-# Read from specific host
-edgeo-bacnet read -H 192.168.1.100 -d 1234 --object ai:0
+# Read array length
+edgeo-bacnet read -d 1234 -o device:1234 -p object-list -i 0
 
 # JSON output
-edgeo-bacnet read -d 1234 --object ai:0 -o json
+edgeo-bacnet read -d 1234 -o ai:1 -p pv -o json
 ```
 
-## Command: write
+**Output:**
 
-Write property to an object.
+```
+Object:   analog-input:1
+Property: present-value
+Value:    72.5
+```
 
-### Usage
+### write
+
+Write a property value to a BACnet object.
 
 ```bash
 edgeo-bacnet write [flags]
 ```
 
-### Flags
+**Flags:**
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--device` | `-d` | Device instance ID (required) |
-| `--object` | | Object identifier (required) |
-| `--property` | | Property name (default: present-value) |
-| `--value` | | Value to write (required) |
-| `--priority` | | Write priority (1-16) |
-| `--index` | | Array index |
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--device` | `-d` | | Device instance ID (required) |
+| `--object` | `-o` | | Object identifier (required) |
+| `--property` | `-p` | `present-value` | Property identifier |
+| `--value` | `-v` | | Value to write (required) |
+| `--priority` | `-P` | | Write priority (1-16) |
+| `--index` | `-i` | | Array index |
+| `--type` | | | Value type (auto, real, int, bool, string) |
 
-### Examples
+**Examples:**
 
 ```bash
-# Write present value
-edgeo-bacnet write -d 1234 --object ao:0 --value 72.5
+# Write a setpoint
+edgeo-bacnet write -d 1234 -o ao:1 -p pv -v 72.5
 
-# Write with priority 8 (Manual Operator)
-edgeo-bacnet write -d 1234 --object ao:0 --value 72.5 --priority 8
+# Write with priority
+edgeo-bacnet write -d 1234 -o bo:1 -p pv -v true -P 8
 
-# Relinquish (write null)
-edgeo-bacnet write -d 1234 --object ao:0 --value null --priority 8
+# Write boolean
+edgeo-bacnet write -d 1234 -o bo:1 -p pv -v true
 
-# Write binary value
-edgeo-bacnet write -d 1234 --object bo:0 --value true
-edgeo-bacnet write -d 1234 --object bo:0 --value active
+# Write integer
+edgeo-bacnet write -d 1234 -o msv:1 -p pv -v 3 --type int
+
+# Write string
+edgeo-bacnet write -d 1234 -o dev:1234 -p description -v "Main HVAC"
 ```
 
-## Command: watch
+**Output:**
 
-Monitor property values in real-time.
+```
+Object:   analog-output:1
+Property: present-value
+Value:    72.5
+Priority: 8
+Status:   Success
+```
 
-### Usage
+### watch
+
+Monitor an object for value changes using COV subscriptions.
 
 ```bash
 edgeo-bacnet watch [flags]
 ```
 
-### Flags
+**Flags:**
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--device` | `-d` | Device instance ID (required) |
-| `--object` | | Object identifiers (repeatable) |
-| `--interval` | `-i` | Polling interval (default: 1s) |
-| `--cov` | | Use COV subscriptions instead of polling |
-| `--lifetime` | | COV subscription lifetime (default: 300s) |
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--device` | `-d` | | Device instance ID (required) |
+| `--object` | `-o` | | Object identifier(s), comma-separated |
+| `--duration` | | | Watch duration (e.g., 5m, 1h) |
+| `--confirmed` | | `false` | Use confirmed notifications |
+| `--increment` | | | COV increment for analog values |
 
-### Examples
+**Examples:**
 
 ```bash
 # Watch single object
-edgeo-bacnet watch -d 1234 --object ai:0
+edgeo-bacnet watch -d 1234 -o ai:1
 
 # Watch multiple objects
-edgeo-bacnet watch -d 1234 --object ai:0 --object ai:1 --object ao:0
+edgeo-bacnet watch -d 1234 -o ai:1,ai:2,bi:1
 
-# Watch with COV
-edgeo-bacnet watch -d 1234 --object ai:0 --cov
+# Watch for 5 minutes
+edgeo-bacnet watch -d 1234 -o ai:1 --duration 5m
 
-# Faster polling
-edgeo-bacnet watch -d 1234 --object ai:0 -i 500ms
+# With COV increment
+edgeo-bacnet watch -d 1234 -o ai:1 --increment 0.5
 ```
 
-## Command: dump
+**Output:**
 
-Dump all objects and properties from a device.
+```
+Watching analog-input:1 on device 1234...
 
-### Usage
+[2024-02-01 10:15:30] analog-input:1
+  present-value: 72.5
+  status-flags: {in-alarm:false, fault:false, overridden:false, out-of-service:false}
+
+[2024-02-01 10:15:45] analog-input:1
+  present-value: 73.2
+  status-flags: {in-alarm:false, fault:false, overridden:false, out-of-service:false}
+
+^C
+Received 2 notifications
+```
+
+### dump
+
+Dump all objects and their values from a device.
 
 ```bash
 edgeo-bacnet dump [flags]
 ```
 
-### Flags
+**Flags:**
 
-| Flag | Description |
-|------|-------------|
-| `--device` | Device instance ID (required) |
-| `--file` | Output file |
-| `--format` | Output format: json, csv |
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--device` | `-d` | | Device instance ID (required) |
+| `--type` | | | Filter by object type |
+| `--properties` | | `pv,name` | Properties to read |
 
-### Examples
+**Examples:**
 
 ```bash
-# Dump to console
+# Dump all objects
 edgeo-bacnet dump -d 1234
 
-# Dump to JSON file
-edgeo-bacnet dump -d 1234 --file device.json --format json
+# Dump only analog inputs
+edgeo-bacnet dump -d 1234 --type analog-input
 
-# Dump to CSV
-edgeo-bacnet dump -d 1234 --file device.csv --format csv
+# Dump with specific properties
+edgeo-bacnet dump -d 1234 --properties pv,name,units,desc
+
+# JSON output
+edgeo-bacnet dump -d 1234 -o json
 ```
 
-## Command: info
+**Output:**
 
-Display device information.
+```
+Device 1234 Object Dump
+========================
 
-### Usage
+analog-input:1
+  object-name:    Zone Temperature
+  present-value:  72.5
+  units:          °F
+
+analog-input:2
+  object-name:    Supply Air Temp
+  present-value:  55.3
+  units:          °F
+
+binary-output:1
+  object-name:    Fan Enable
+  present-value:  active
+
+Total: 15 objects
+```
+
+### info
+
+Display detailed device information.
 
 ```bash
-edgeo-bacnet info -d <device-id>
+edgeo-bacnet info [flags]
 ```
 
-### Examples
+**Flags:**
+
+| Flag | Short | Default | Description |
+|------|-------|---------|-------------|
+| `--device` | `-d` | | Device instance ID (required) |
+
+**Examples:**
 
 ```bash
 # Get device info
@@ -283,71 +303,172 @@ edgeo-bacnet info -d 1234 -o json
 
 ```
 Device Information
-------------------
-Instance ID:        1234
-Object Name:        VAV-Controller-1
-Vendor:             Tridium
-Model:              JACE 8000
-Firmware:           4.8.1.0
-Application:        Niagara 4
-Protocol Version:   1
-Protocol Revision:  14
-Segmentation:       Both
-Max APDU Length:    1476
-Objects:            42
+==================
+
+Device ID:       1234
+Vendor ID:       123
+Vendor Name:     ACME Controls
+Model Name:      VAV-2000
+Firmware:        v2.3.1
+Application:     BACnet Controller
+Description:     Main Building VAV Controller
+Location:        Floor 2, Mechanical Room
+
+Protocol:        BACnet/IP
+Max APDU:        1476
+Segmentation:    no-segmentation
+
+Objects:         45
+  analog-input:     12
+  analog-output:    6
+  analog-value:     8
+  binary-input:     5
+  binary-output:    4
+  schedule:         3
+  trend-log:        7
 ```
 
-## Command: interactive
+### interactive
 
-Start an interactive REPL session.
-
-### Usage
+Start an interactive BACnet shell.
 
 ```bash
 edgeo-bacnet interactive [flags]
 ```
 
-### Shell Commands
-
-| Command | Description |
-|---------|-------------|
-| `scan` | Discover devices |
-| `read <dev> <obj> [prop]` | Read property |
-| `write <dev> <obj> <value> [priority]` | Write property |
-| `objects <dev>` | List device objects |
-| `info <dev>` | Show device info |
-| `help` | Show help |
-| `quit` / `exit` | Exit shell |
-
-### Example Session
+**Commands in interactive mode:**
 
 ```
-$ edgeo-bacnet interactive
-BACnet Interactive Shell
-Type 'help' for available commands
+> help                          Show available commands
+> scan                          Discover devices
+> read <obj> <prop>             Read property
+> write <obj> <prop> <value>    Write property
+> watch <obj>                   Start watching object
+> info                          Show device info
+> device <id>                   Switch target device
+> quit                          Exit
+```
 
-bacnet> scan
-Found 3 devices:
-  1234 - VAV-Controller-1 (192.168.1.100)
-  1235 - VAV-Controller-2 (192.168.1.101)
-  1236 - AHU-Controller (192.168.1.102)
+**Example session:**
 
-bacnet> read 1234 ai:0
-AI:0 Present-Value = 72.5
+```bash
+$ edgeo-bacnet interactive -d 1234
+edgeo-bacnet> read ai:1 pv
+72.5
+edgeo-bacnet> read ai:1 name
+Zone Temperature
+edgeo-bacnet> write ao:1 pv 75
+OK
+edgeo-bacnet> quit
+```
 
-bacnet> write 1234 ao:0 72.5 8
-Written 72.5 to AO:0 at priority 8
+### version
 
-bacnet> objects 1234
-Device 1234 objects:
-  AI:0  - Zone Temperature
-  AI:1  - Supply Air Temp
-  AO:0  - Damper Position
-  BO:0  - Fan Command
-  ...
+Display version information.
 
-bacnet> quit
-Goodbye!
+```bash
+edgeo-bacnet version
+```
+
+**Output:**
+
+```
+edgeo-bacnet version 1.0.0
+```
+
+## Object Type Aliases
+
+Use shorthand aliases for object types:
+
+| Alias | Full Name |
+|-------|-----------|
+| ai | analog-input |
+| ao | analog-output |
+| av | analog-value |
+| bi | binary-input |
+| bo | binary-output |
+| bv | binary-value |
+| msi | multi-state-input |
+| mso | multi-state-output |
+| msv | multi-state-value |
+| dev | device |
+| sch | schedule |
+| cal | calendar |
+| tl | trend-log |
+| nc | notification-class |
+| prg | program |
+
+## Property Aliases
+
+Use shorthand aliases for properties:
+
+| Alias | Full Name |
+|-------|-----------|
+| pv | present-value |
+| name | object-name |
+| oid | object-identifier |
+| type | object-type |
+| desc | description |
+| sf | status-flags |
+| oos | out-of-service |
+| pa | priority-array |
+| rd | relinquish-default |
+
+## Output Formats
+
+### Table (default)
+
+Human-readable tabular format.
+
+```bash
+edgeo-bacnet scan -o table
+```
+
+### JSON
+
+Machine-readable JSON format.
+
+```bash
+edgeo-bacnet scan -o json
+```
+
+```json
+{
+  "devices": [
+    {
+      "device_id": 1234,
+      "address": "192.168.1.100:47808",
+      "vendor_id": 123,
+      "max_apdu": 1476,
+      "segmentation": "no-segmentation"
+    }
+  ]
+}
+```
+
+### CSV
+
+Comma-separated values for spreadsheet import.
+
+```bash
+edgeo-bacnet scan -o csv
+```
+
+```
+device_id,address,vendor_id,max_apdu,segmentation
+1234,192.168.1.100:47808,123,1476,no-segmentation
+```
+
+### Raw
+
+Minimal output, one value per line.
+
+```bash
+edgeo-bacnet read -d 1234 -o ai:1 -p pv -o raw
+```
+
+```
+72.5
 ```
 
 ## Configuration File
@@ -355,71 +476,79 @@ Goodbye!
 Create `~/.edgeo-bacnet.yaml` for default settings:
 
 ```yaml
-# Connection
-port: 47808
-timeout: 3s
+# Default device
+device: 1234
+
+# Network settings
+timeout: 5s
 retries: 3
 
-# Network
-local: ""
-bbmd: ""
+# BBMD configuration (for cross-subnet)
+bbmd: 192.168.1.1
+bbmd-port: 47808
+bbmd-ttl: 60s
 
-# Discovery
-discover-timeout: 5s
-
-# Output
+# Output preferences
 output: table
 verbose: false
 ```
 
 ## Environment Variables
 
-Environment variables use the `BACNET_` prefix:
+Settings can also be configured via environment variables with `BACNET_` prefix:
 
 ```bash
-export BACNET_PORT=47808
-export BACNET_TIMEOUT=3s
-export BACNET_RETRIES=3
+export BACNET_DEVICE=1234
+export BACNET_TIMEOUT=5s
+export BACNET_VERBOSE=true
+
+edgeo-bacnet read -o ai:1 -p pv
 ```
 
-## Output Formats
+## Examples
 
-### Table (default)
+### Monitor Building HVAC
 
-```
-OBJECT     PROPERTY       VALUE
-AI:0       present-value  72.5
-AI:0       object-name    Zone Temp
-AI:0       units          degrees-fahrenheit
-```
+```bash
+# Discover controllers
+edgeo-bacnet scan
 
-### JSON
+# Get AHU info
+edgeo-bacnet info -d 1234
 
-```json
-{
-  "object": "AI:0",
-  "property": "present-value",
-  "value": 72.5
-}
-```
+# Read zone temperatures
+for i in 1 2 3 4 5; do
+  echo "Zone $i: $(edgeo-bacnet read -d 1234 -o ai:$i -p pv -o raw)"
+done
 
-### CSV
-
-```csv
-object,property,value
-AI:0,present-value,72.5
-AI:0,object-name,Zone Temp
+# Watch for alarms
+edgeo-bacnet watch -d 1234 -o ai:1,ai:2,ai:3 --duration 1h
 ```
 
-## Exit Codes
+### Commissioning Script
 
-| Code | Description |
-|------|-------------|
-| 0 | Success |
-| 1 | Error (connection failed, read/write failed, etc.) |
+```bash
+#!/bin/bash
 
-## See Also
+DEVICE=$1
 
-- [Client Library Documentation](client.md)
-- [Configuration Options](options.md)
-- [BACnet Object Reference](index.md#bacnet-object-reference)
+# Verify device
+edgeo-bacnet info -d $DEVICE || exit 1
+
+# Test all analog outputs
+for i in $(seq 1 10); do
+  echo "Testing AO:$i"
+  edgeo-bacnet write -d $DEVICE -o ao:$i -p pv -v 50 -P 8
+  sleep 2
+  edgeo-bacnet write -d $DEVICE -o ao:$i -p pv -v null -P 8
+done
+
+echo "Commissioning complete"
+```
+
+### Export Device Points
+
+```bash
+# Export all points to CSV
+edgeo-bacnet dump -d 1234 --properties name,pv,units -o csv > device_1234_points.csv
+```

@@ -2,7 +2,7 @@
   "name": "edgeo-drivers-docs",
   "version": "1.0.0",
   "private": true,
-  "description": "Documentation for Edgeo industrial protocol drivers (Modbus TCP, OPC UA)",
+  "description": "Documentation for Edgeo industrial protocol drivers (BACnet, Modbus TCP, MQTT, OPC UA, S7, SNMP)",
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",

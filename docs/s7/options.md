@@ -1,103 +1,268 @@
-# Configuration Options
+# Configuration
 
-Complete reference for S7 client configuration options.
+Configuration uses the functional options pattern.
 
-## Connection Options
+## Client Options
 
 ### WithRack
 
 Sets the PLC rack number.
 
 ```go
-s7.WithRack(0) // Rack 0 (default: 0)
+s7.WithRack(rack Rack)
 ```
 
-**Valid range:** 0-7
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithRack(0),
+)
+```
+
+The rack identifies the physical position of the PLC. Values: 0-7.
+
+**Default:** 0
 
 ### WithSlot
 
 Sets the PLC slot number.
 
 ```go
-s7.WithSlot(1) // Slot 1 (varies by PLC model)
+s7.WithSlot(slot Slot)
 ```
 
-**Default values by PLC:**
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithSlot(1),
+)
+```
 
-| PLC Model | Default Slot |
-|-----------|--------------|
-| S7-200/Smart | 0 |
-| S7-300/400 | 2 |
-| S7-1200/1500 | 1 |
-| LOGO! | 0 |
+The slot identifies the CPU location within the rack. Values: 0-31.
+
+**Default:** 1 (for S7-300/400)
+
+Typical configuration by model:
+
+| Model | Rack | Slot |
+|-------|------|------|
+| S7-300/400 | 0 | 1-2 |
+| S7-1200/1500 | 0 | 0-1 |
+| S7-200 Smart | 0 | 1 |
+| LOGO! | 0 | 1 |
 
 ### WithTimeout
 
-Sets the request timeout.
+Sets the timeout for operations.
 
 ```go
-s7.WithTimeout(5*time.Second) // 5 seconds (default: 5s)
+s7.WithTimeout(d time.Duration)
 ```
+
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithTimeout(5*time.Second),
+)
+```
+
+**Default:** 5 seconds
 
 ### WithPDUSize
 
-Sets the maximum PDU (Protocol Data Unit) size.
+Sets the maximum PDU size to negotiate.
 
 ```go
-s7.WithPDUSize(960) // 960 bytes (default: 960)
+s7.WithPDUSize(size uint16)
 ```
 
-**Valid range:** 256-65536 bytes
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithPDUSize(480),
+)
+```
 
-Larger PDU sizes allow more data per request but may not be supported by all PLCs.
+The actual size will be negotiated with the PLC (may be lower).
 
-## Reconnection Options
+| Constant | Value |
+|----------|-------|
+| `MinPDUSize` | 240 |
+| `DefaultPDUSize` | 480 |
+| `MaxPDUSize` | 960 |
+
+**Default:** 480
 
 ### WithAutoReconnect
 
 Enables automatic reconnection when the connection is lost.
 
 ```go
-s7.WithAutoReconnect(true) // Enable auto-reconnect (default: false)
+s7.WithAutoReconnect(enable bool)
 ```
+
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithAutoReconnect(true),
+)
+```
+
+**Default:** false
 
 ### WithReconnectBackoff
 
-Sets the initial backoff delay for reconnection attempts.
+Sets the initial delay between reconnection attempts.
 
 ```go
-s7.WithReconnectBackoff(1*time.Second) // 1 second (default: 1s)
+s7.WithReconnectBackoff(d time.Duration)
 ```
+
+The backoff increases exponentially up to `MaxReconnectTime`.
+
+**Default:** 1 second
 
 ### WithMaxReconnectTime
 
-Sets the maximum backoff delay for reconnection attempts.
+Sets the maximum delay between reconnection attempts.
 
 ```go
-s7.WithMaxReconnectTime(30*time.Second) // 30 seconds (default: 30s)
+s7.WithMaxReconnectTime(d time.Duration)
 ```
 
-Backoff increases exponentially up to this maximum.
+**Default:** 30 seconds
 
 ### WithMaxRetries
 
-Sets the maximum number of retry attempts for failed operations.
+Sets the maximum number of attempts for a request.
 
 ```go
-s7.WithMaxRetries(3) // 3 retries (default: 3)
+s7.WithMaxRetries(n int)
 ```
 
-## Logging Options
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithAutoReconnect(true),
+    s7.WithMaxRetries(5),
+)
+```
+
+**Default:** 3
+
+### WithOnConnect
+
+Sets a callback called upon connection.
+
+```go
+s7.WithOnConnect(fn func())
+```
+
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithOnConnect(func() {
+        log.Println("Connected!")
+    }),
+)
+```
+
+### WithOnDisconnect
+
+Sets a callback called upon disconnection.
+
+```go
+s7.WithOnDisconnect(fn func(error))
+```
+
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithOnDisconnect(func(err error) {
+        log.Printf("Disconnected: %v\n", err)
+    }),
+)
+```
 
 ### WithLogger
 
-Sets a custom logger for the client.
+Sets the logger for the client.
 
 ```go
-import "log/slog"
+s7.WithLogger(logger *slog.Logger)
+```
 
-logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-s7.WithLogger(logger)
+```go
+logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+    Level: slog.LevelDebug,
+}))
+
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithLogger(logger),
+)
+```
+
+**Default:** `slog.Default()`
+
+## Pool Options
+
+### WithSize
+
+Sets the maximum pool size.
+
+```go
+s7.WithSize(size int)
+```
+
+```go
+pool, _ := s7.NewPool("192.168.1.100:102",
+    s7.WithSize(20),
+)
+```
+
+**Default:** 5
+
+### WithMaxIdleTime
+
+Sets the maximum idle time before closing a connection.
+
+```go
+s7.WithMaxIdleTime(d time.Duration)
+```
+
+```go
+pool, _ := s7.NewPool("192.168.1.100:102",
+    s7.WithMaxIdleTime(10*time.Minute),
+)
+```
+
+**Default:** 5 minutes
+
+### WithHealthCheckFrequency
+
+Sets the frequency of connection health checks.
+
+```go
+s7.WithHealthCheckFrequency(d time.Duration)
+```
+
+```go
+pool, _ := s7.NewPool("192.168.1.100:102",
+    s7.WithHealthCheckFrequency(30*time.Second),
+)
+```
+
+**Default:** 1 minute. Set to 0 to disable.
+
+### WithClientOptions
+
+Sets the options used when creating pool clients.
+
+```go
+s7.WithClientOptions(opts ...Option)
+```
+
+```go
+pool, _ := s7.NewPool("192.168.1.100:102",
+    s7.WithSize(10),
+    s7.WithClientOptions(
+        s7.WithRack(0),
+        s7.WithSlot(1),
+        s7.WithTimeout(3*time.Second),
+    ),
+)
 ```
 
 ## Complete Example
@@ -106,90 +271,48 @@ s7.WithLogger(logger)
 package main
 
 import (
-    "context"
     "log/slog"
     "os"
     "time"
 
-    "github.com/edgeo/drivers/s7/s7"
+    "github.com/edgeo-scada/s7/s7"
 )
 
 func main() {
-    logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-        Level: slog.LevelDebug,
+    // Custom logger
+    logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+        Level: slog.LevelInfo,
     }))
 
-    client := s7.NewClient(
-        "192.168.1.10",
-        // Connection settings
+    // Client with all options
+    client, _ := s7.NewClient("192.168.1.100:102",
+        // PLC identification
         s7.WithRack(0),
         s7.WithSlot(1),
-        s7.WithTimeout(5*time.Second),
-        s7.WithPDUSize(960),
 
-        // Reconnection settings
+        // PDU
+        s7.WithPDUSize(480),
+
+        // Timeouts
+        s7.WithTimeout(5*time.Second),
+
+        // Reconnection
         s7.WithAutoReconnect(true),
-        s7.WithReconnectBackoff(1*time.Second),
+        s7.WithReconnectBackoff(500*time.Millisecond),
         s7.WithMaxReconnectTime(30*time.Second),
         s7.WithMaxRetries(5),
+
+        // Callbacks
+        s7.WithOnConnect(func() {
+            logger.Info("connected")
+        }),
+        s7.WithOnDisconnect(func(err error) {
+            logger.Warn("disconnected", slog.String("error", err.Error()))
+        }),
 
         // Logging
         s7.WithLogger(logger),
     )
-
-    ctx := context.Background()
-    if err := client.Connect(ctx); err != nil {
-        log.Fatal(err)
-    }
     defer client.Close()
 }
 ```
-
-## Environment Variables
-
-Options can also be set via environment variables with the `S7_` prefix:
-
-| Variable | Description |
-|----------|-------------|
-| `S7_RACK` | Rack number |
-| `S7_SLOT` | Slot number |
-| `S7_TIMEOUT` | Request timeout |
-| `S7_PDU_SIZE` | PDU size |
-| `S7_AUTO_RECONNECT` | Enable auto-reconnect |
-
-## Configuration File
-
-The CLI tool supports YAML configuration in `~/.edgeo-s7.yaml`:
-
-```yaml
-# Connection
-host: 192.168.1.10
-rack: 0
-slot: 1
-timeout: 5s
-pdu-size: 960
-
-# Reconnection
-auto-reconnect: true
-reconnect-backoff: 1s
-max-reconnect-time: 30s
-max-retries: 3
-
-# Output
-output: table
-verbose: false
-```
-
-## Options Summary
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `WithRack` | 0 | PLC rack number (0-7) |
-| `WithSlot` | 1 | PLC slot number |
-| `WithTimeout` | 5s | Request timeout |
-| `WithPDUSize` | 960 | Max PDU size (256-65536) |
-| `WithAutoReconnect` | false | Enable auto-reconnection |
-| `WithReconnectBackoff` | 1s | Initial reconnect delay |
-| `WithMaxReconnectTime` | 30s | Max reconnect delay |
-| `WithMaxRetries` | 3 | Max operation retries |
-| `WithLogger` | nil | Custom slog logger |

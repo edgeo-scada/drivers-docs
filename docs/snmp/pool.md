@@ -1,277 +1,419 @@
-# Connection Pool
+---
+slug: /snmp/pool
+---
 
-The SNMP library includes a connection pool for high-throughput monitoring applications.
+# Pool de connexions
 
-## Overview
+Le pool de connexions permet de gérer efficacement plusieurs connexions SNMP vers un même agent, optimisant les performances pour les applications à fort trafic.
 
-Connection pooling provides:
-- Multiple concurrent connections to the same agent
-- Load balancing across connections
-- Automatic health checking
-- Reconnection for failed connections
+## Vue d'ensemble
 
-## Creating a Pool
+Le pool maintient un ensemble de connexions SNMP pré-établies, permettant :
+
+- Réutilisation des connexions existantes
+- Limitation du nombre de connexions simultanées
+- Health checks périodiques
+- Gestion automatique des connexions inactives
+
+## Création du pool
+
+### Configuration minimale
 
 ```go
-package main
-
-import (
-    "context"
-    "log"
-    "time"
-
-    "github.com/edgeo/drivers/snmp/snmp"
+pool, err := snmp.NewPool(ctx,
+    snmp.WithPoolSize(10),
+    snmp.WithPoolTarget("192.168.1.1:161"),
+    snmp.WithPoolVersion(snmp.Version2c),
+    snmp.WithPoolCommunity("public"),
 )
-
-func main() {
-    pool := snmp.NewPool(
-        snmp.WithPoolSize(3),
-        snmp.WithPoolMaxIdleTime(5*time.Minute),
-        snmp.WithPoolHealthCheckInterval(30*time.Second),
-        // Client options applied to each connection
-        snmp.WithTarget("192.168.1.1"),
-        snmp.WithVersion(snmp.Version2c),
-        snmp.WithCommunity("public"),
-    )
-
-    ctx := context.Background()
-    if err := pool.Start(ctx); err != nil {
-        log.Fatal(err)
-    }
-    defer pool.Close()
-}
-```
-
-## Pool Options
-
-### WithPoolSize
-
-Sets the number of connections in the pool.
-
-```go
-snmp.WithPoolSize(5) // 5 connections (default: 3)
-```
-
-### WithPoolMaxIdleTime
-
-Sets the maximum idle time before connection cleanup.
-
-```go
-snmp.WithPoolMaxIdleTime(5*time.Minute) // Default: 5 minutes
-```
-
-### WithPoolHealthCheckInterval
-
-Sets the health check interval.
-
-```go
-snmp.WithPoolHealthCheckInterval(30*time.Second) // Default: 30 seconds
-```
-
-### WithPoolClientOptions
-
-Applies client options to all pool connections.
-
-```go
-snmp.WithPoolClientOptions(
-    snmp.WithTimeout(5*time.Second),
-    snmp.WithRetries(2),
-)
-```
-
-## Using the Pool
-
-### Execute Operation
-
-```go
-// Execute with automatic connection selection
-result, err := pool.Get(ctx, snmp.OIDSysDescr)
 if err != nil {
     log.Fatal(err)
 }
-log.Printf("System: %s", result[0].Value)
+defer pool.Close()
 ```
 
-### All Pool Methods
-
-The pool exposes the same methods as the client:
+### Configuration complète
 
 ```go
-// GET
-result, err := pool.Get(ctx, oid1, oid2)
+pool, err := snmp.NewPool(ctx,
+    // Taille du pool
+    snmp.WithPoolSize(20),
 
-// GETNEXT
-result, err := pool.GetNext(ctx, oid)
+    // Configuration cible
+    snmp.WithPoolTarget("192.168.1.1:161"),
+    snmp.WithPoolVersion(snmp.Version2c),
+    snmp.WithPoolCommunity("public"),
 
-// GETBULK
-result, err := pool.GetBulk(ctx, 0, 10, oid)
+    // Health checks
+    snmp.WithPoolHealthCheck(30*time.Second),
 
-// WALK
-result, err := pool.Walk(ctx, rootOID)
+    // Gestion des connexions inactives
+    snmp.WithPoolMaxIdleTime(5*time.Minute),
 
-// SET
-err := pool.Set(ctx, varbind)
-```
-
-## Concurrent Monitoring Example
-
-```go
-package main
-
-import (
-    "context"
-    "log"
-    "sync"
-    "time"
-
-    "github.com/edgeo/drivers/snmp/snmp"
+    // Options client héritées
+    snmp.WithTimeout(5*time.Second),
+    snmp.WithRetries(3),
 )
-
-func main() {
-    pool := snmp.NewPool(
-        snmp.WithPoolSize(5),
-        snmp.WithTarget("192.168.1.1"),
-        snmp.WithVersion(snmp.Version2c),
-        snmp.WithCommunity("public"),
-    )
-
-    ctx := context.Background()
-    if err := pool.Start(ctx); err != nil {
-        log.Fatal(err)
-    }
-    defer pool.Close()
-
-    // Monitor multiple OIDs concurrently
-    oids := []string{
-        "1.3.6.1.2.1.2.2.1.10.1",  // ifInOctets.1
-        "1.3.6.1.2.1.2.2.1.10.2",  // ifInOctets.2
-        "1.3.6.1.2.1.2.2.1.16.1",  // ifOutOctets.1
-        "1.3.6.1.2.1.2.2.1.16.2",  // ifOutOctets.2
-    }
-
-    var wg sync.WaitGroup
-    results := make(chan snmp.VarBind, len(oids))
-
-    for _, oid := range oids {
-        wg.Add(1)
-        go func(oid string) {
-            defer wg.Done()
-
-            result, err := pool.Get(ctx, oid)
-            if err != nil {
-                log.Printf("Error getting %s: %v", oid, err)
-                return
-            }
-
-            results <- result[0]
-        }(oid)
-    }
-
-    go func() {
-        wg.Wait()
-        close(results)
-    }()
-
-    for vb := range results {
-        log.Printf("%s = %v", vb.OID, vb.Value)
-    }
-}
 ```
 
-## Monitoring Multiple Devices
+## Utilisation du pool
+
+### Acquire et Release
 
 ```go
-package main
-
-import (
-    "context"
-    "log"
-    "sync"
-    "time"
-
-    "github.com/edgeo/drivers/snmp/snmp"
-)
-
-type DevicePool struct {
-    Address string
-    Pool    *snmp.Pool
+// Acquérir un client du pool
+client, err := pool.Acquire(ctx)
+if err != nil {
+    return err
 }
+defer pool.Release(client)
 
-func main() {
-    ctx := context.Background()
-
-    devices := []string{
-        "192.168.1.1",
-        "192.168.1.2",
-        "192.168.1.3",
-    }
-
-    // Create pool for each device
-    pools := make([]*DevicePool, len(devices))
-    for i, addr := range devices {
-        pool := snmp.NewPool(
-            snmp.WithPoolSize(2),
-            snmp.WithTarget(addr),
-            snmp.WithVersion(snmp.Version2c),
-            snmp.WithCommunity("public"),
-        )
-
-        if err := pool.Start(ctx); err != nil {
-            log.Printf("Failed to start pool for %s: %v", addr, err)
-            continue
-        }
-
-        pools[i] = &DevicePool{Address: addr, Pool: pool}
-    }
-
-    defer func() {
-        for _, dp := range pools {
-            if dp != nil && dp.Pool != nil {
-                dp.Pool.Close()
-            }
-        }
-    }()
-
-    // Poll all devices
-    var wg sync.WaitGroup
-    for _, dp := range pools {
-        if dp == nil {
-            continue
-        }
-
-        wg.Add(1)
-        go func(dp *DevicePool) {
-            defer wg.Done()
-
-            result, err := dp.Pool.Get(ctx, snmp.OIDSysUpTime)
-            if err != nil {
-                log.Printf("%s: error %v", dp.Address, err)
-                return
-            }
-
-            log.Printf("%s: uptime = %v", dp.Address, result[0].Value)
-        }(dp)
-    }
-
-    wg.Wait()
+// Utiliser le client
+vars, err := client.Get(ctx, snmp.OIDSysDescr)
+if err != nil {
+    return err
 }
 ```
 
-## Pool Statistics
+### Pattern avec fonction
+
+```go
+// Helper pour automatiser acquire/release
+func withClient(ctx context.Context, pool *snmp.Pool, fn func(*snmp.Client) error) error {
+    client, err := pool.Acquire(ctx)
+    if err != nil {
+        return err
+    }
+    defer pool.Release(client)
+
+    return fn(client)
+}
+
+// Utilisation
+err := withClient(ctx, pool, func(client *snmp.Client) error {
+    vars, err := client.Get(ctx, snmp.OIDSysDescr)
+    if err != nil {
+        return err
+    }
+    fmt.Printf("Description: %s\n", vars[0].Value)
+    return nil
+})
+```
+
+## Opérations sur le pool
+
+### Acquire
+
+Obtient un client disponible du pool. Bloque si aucun client n'est disponible.
+
+```go
+// Acquire avec timeout via context
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+client, err := pool.Acquire(ctx)
+if err != nil {
+    if errors.Is(err, context.DeadlineExceeded) {
+        log.Println("Timeout en attendant un client disponible")
+    }
+    return err
+}
+defer pool.Release(client)
+```
+
+### Release
+
+Retourne un client au pool pour réutilisation.
+
+```go
+client, _ := pool.Acquire(ctx)
+
+// Utilisation...
+vars, err := client.Get(ctx, oid)
+
+// IMPORTANT: toujours release, même en cas d'erreur
+pool.Release(client)
+```
+
+### Close
+
+Ferme le pool et toutes ses connexions.
+
+```go
+pool, _ := snmp.NewPool(ctx, opts...)
+
+// Utilisation...
+
+// Fermer proprement
+if err := pool.Close(); err != nil {
+    log.Printf("Erreur lors de la fermeture du pool: %v", err)
+}
+```
+
+## Health Checks
+
+### Configuration
+
+```go
+pool, _ := snmp.NewPool(ctx,
+    // Vérifier les connexions toutes les 30 secondes
+    snmp.WithPoolHealthCheck(30*time.Second),
+)
+```
+
+### Fonctionnement
+
+Le health check :
+1. Envoie une requête GET sur `sysUpTime` à chaque connexion
+2. Marque les connexions défaillantes comme invalides
+3. Remplace les connexions invalides par de nouvelles
+
+### Health check manuel
+
+```go
+// Forcer un health check immédiat
+healthy, unhealthy := pool.HealthCheck(ctx)
+fmt.Printf("Connexions saines: %d, défaillantes: %d\n", healthy, unhealthy)
+```
+
+## Gestion des connexions inactives
+
+### Configuration
+
+```go
+pool, _ := snmp.NewPool(ctx,
+    // Fermer les connexions inactives depuis plus de 5 minutes
+    snmp.WithPoolMaxIdleTime(5*time.Minute),
+)
+```
+
+### Éviction automatique
+
+Les connexions inactives sont automatiquement fermées et remplacées lors de l'acquisition suivante.
+
+## Statistiques du pool
+
+### Stats en temps réel
 
 ```go
 stats := pool.Stats()
 
-log.Printf("Total connections: %d", stats.TotalConnections)
-log.Printf("Available: %d", stats.Available)
-log.Printf("In use: %d", stats.InUse)
-log.Printf("Health check failures: %d", stats.HealthCheckFailures)
+fmt.Printf("Taille totale: %d\n", stats.Size)
+fmt.Printf("En utilisation: %d\n", stats.InUse)
+fmt.Printf("Disponibles: %d\n", stats.Available)
+fmt.Printf("Attente: %d\n", stats.Waiting)
+fmt.Printf("Total acquis: %d\n", stats.TotalAcquired)
+fmt.Printf("Total relâchés: %d\n", stats.TotalReleased)
 ```
 
-## Best Practices
+### Métriques
 
-1. **Size appropriately** - Set pool size based on expected concurrent operations
-2. **Monitor health** - Watch for health check failures
-3. **Set idle timeout** - Prevent stale connections
-4. **Handle errors** - Pool will recreate failed connections
-5. **Close properly** - Call `Close()` to clean up resources
+```go
+metrics := pool.Metrics()
+
+fmt.Printf("Connexions actives: %d\n", metrics.ActiveConnections.Value())
+fmt.Printf("Taille du pool: %d\n", metrics.PoolSize.Value())
+fmt.Printf("Disponibles: %d\n", metrics.PoolAvailable.Value())
+```
+
+## Patterns avancés
+
+### Pool avec plusieurs cibles
+
+```go
+// Créer un pool par cible
+pools := make(map[string]*snmp.Pool)
+
+for _, target := range targets {
+    pool, err := snmp.NewPool(ctx,
+        snmp.WithPoolSize(5),
+        snmp.WithPoolTarget(target),
+        snmp.WithPoolCommunity("public"),
+    )
+    if err != nil {
+        return err
+    }
+    pools[target] = pool
+}
+
+// Cleanup
+defer func() {
+    for _, pool := range pools {
+        pool.Close()
+    }
+}()
+```
+
+### Pool avec worker pattern
+
+```go
+type SNMPWorkerPool struct {
+    pool    *snmp.Pool
+    jobs    chan Job
+    results chan Result
+}
+
+type Job struct {
+    OID snmp.OID
+}
+
+type Result struct {
+    OID   snmp.OID
+    Value interface{}
+    Error error
+}
+
+func (wp *SNMPWorkerPool) Start(ctx context.Context, workers int) {
+    for i := 0; i < workers; i++ {
+        go wp.worker(ctx)
+    }
+}
+
+func (wp *SNMPWorkerPool) worker(ctx context.Context) {
+    for job := range wp.jobs {
+        client, err := wp.pool.Acquire(ctx)
+        if err != nil {
+            wp.results <- Result{OID: job.OID, Error: err}
+            continue
+        }
+
+        vars, err := client.Get(ctx, job.OID)
+        wp.pool.Release(client)
+
+        if err != nil {
+            wp.results <- Result{OID: job.OID, Error: err}
+        } else {
+            wp.results <- Result{OID: job.OID, Value: vars[0].Value}
+        }
+    }
+}
+```
+
+### Pool avec retry
+
+```go
+func getWithPoolRetry(ctx context.Context, pool *snmp.Pool, oid snmp.OID) ([]snmp.Variable, error) {
+    var lastErr error
+
+    for attempt := 0; attempt < 3; attempt++ {
+        client, err := pool.Acquire(ctx)
+        if err != nil {
+            return nil, err
+        }
+
+        vars, err := client.Get(ctx, oid)
+        pool.Release(client)
+
+        if err == nil {
+            return vars, nil
+        }
+
+        lastErr = err
+
+        // Attendre avant de réessayer
+        select {
+        case <-ctx.Done():
+            return nil, ctx.Err()
+        case <-time.After(time.Duration(attempt+1) * 100 * time.Millisecond):
+        }
+    }
+
+    return nil, fmt.Errorf("failed after 3 attempts: %w", lastErr)
+}
+```
+
+## Bonnes pratiques
+
+### Dimensionnement du pool
+
+```go
+// Règle générale: taille = nb_workers * 2
+// Pour 10 workers concurrents:
+pool, _ := snmp.NewPool(ctx,
+    snmp.WithPoolSize(20),
+)
+```
+
+### Toujours Release
+
+```go
+// ✅ Bon - defer immédiatement après acquire
+client, err := pool.Acquire(ctx)
+if err != nil {
+    return err
+}
+defer pool.Release(client)
+
+// ❌ Mauvais - oubli de release
+client, err := pool.Acquire(ctx)
+if err != nil {
+    return err
+}
+vars, err := client.Get(ctx, oid)
+if err != nil {
+    return err // Fuite de connexion!
+}
+pool.Release(client)
+```
+
+### Timeout sur Acquire
+
+```go
+// ✅ Bon - timeout explicite
+ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+defer cancel()
+
+client, err := pool.Acquire(ctx)
+if err != nil {
+    if errors.Is(err, context.DeadlineExceeded) {
+        // Gérer le cas où le pool est saturé
+    }
+    return err
+}
+```
+
+### Monitoring du pool
+
+```go
+// Surveiller la saturation du pool
+go func() {
+    ticker := time.NewTicker(10 * time.Second)
+    defer ticker.Stop()
+
+    for range ticker.C {
+        stats := pool.Stats()
+        utilization := float64(stats.InUse) / float64(stats.Size) * 100
+
+        if utilization > 80 {
+            log.Printf("WARNING: Pool utilization at %.1f%%", utilization)
+        }
+
+        if stats.Waiting > 0 {
+            log.Printf("WARNING: %d requests waiting for connection", stats.Waiting)
+        }
+    }
+}()
+```
+
+## Configuration SNMPv3
+
+```go
+pool, err := snmp.NewPool(ctx,
+    snmp.WithPoolSize(10),
+    snmp.WithPoolTarget("192.168.1.1:161"),
+    snmp.WithPoolVersion(snmp.Version3),
+    snmp.WithSecurityName("admin"),
+    snmp.WithSecurityLevel(snmp.AuthPriv),
+    snmp.WithAuthProtocol(snmp.AuthSHA),
+    snmp.WithAuthPassword("authpassword"),
+    snmp.WithPrivProtocol(snmp.PrivAES),
+    snmp.WithPrivPassword("privpassword"),
+    snmp.WithPoolHealthCheck(30*time.Second),
+)
+```
+
+## Voir aussi
+
+- [Client SNMP](client.md)
+- [Options de configuration](options.md)
+- [Métriques](metrics.md)

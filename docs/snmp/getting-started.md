@@ -1,220 +1,279 @@
+---
+slug: /snmp/getting-started
+---
+
 # Getting Started
 
-This guide will help you get started with the SNMP client library.
+This guide will help you get started quickly with the SNMP library.
 
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/snmp
+go get github.com/edgeo-scada/snmp
 ```
 
-## SNMPv2c Connection
+## Basic Concepts
 
-Most devices support SNMPv2c with community string authentication:
+### OID (Object Identifier)
+
+OIDs identify objects in the MIB (Management Information Base):
+
+```go
+// Predefined OIDs for system information
+snmp.OIDSysDescr     // 1.3.6.1.2.1.1.1.0 - System description
+snmp.OIDSysObjectID  // 1.3.6.1.2.1.1.2.0 - System object ID
+snmp.OIDSysUpTime    // 1.3.6.1.2.1.1.3.0 - System uptime
+snmp.OIDSysContact   // 1.3.6.1.2.1.1.4.0 - Contact
+snmp.OIDSysName      // 1.3.6.1.2.1.1.5.0 - System name
+snmp.OIDSysLocation  // 1.3.6.1.2.1.1.6.0 - Location
+
+// Parse a custom OID
+oid, err := snmp.ParseOID("1.3.6.1.4.1.9.2.1.55.0")
+```
+
+### SNMP Versions
+
+```go
+snmp.Version1   // SNMPv1 - community-based authentication
+snmp.Version2c  // SNMPv2c - community + bulk operations
+snmp.Version3   // SNMPv3 - USM authentication + encryption
+```
+
+## SNMPv1/v2c Client
+
+### Simple Connection
 
 ```go
 package main
 
 import (
     "context"
+    "fmt"
     "log"
-    "time"
 
-    "github.com/edgeo/drivers/snmp/snmp"
+    "github.com/edgeo-scada/snmp/snmp"
 )
 
 func main() {
-    // Create SNMPv2c client
-    client := snmp.NewClient(
-        snmp.WithTarget("192.168.1.1"),
-        snmp.WithPort(161),
+    ctx := context.Background()
+
+    // Create an SNMPv2c client
+    client, err := snmp.NewClient(ctx,
+        snmp.WithTarget("192.168.1.1:161"),
         snmp.WithVersion(snmp.Version2c),
         snmp.WithCommunity("public"),
         snmp.WithTimeout(5*time.Second),
     )
-
-    ctx := context.Background()
-
-    // Connect
-    if err := client.Connect(ctx); err != nil {
-        log.Fatalf("Connection failed: %v", err)
+    if err != nil {
+        log.Fatal(err)
     }
     defer client.Close()
 
-    log.Println("Connected to SNMP agent")
+    // Use the client...
 }
 ```
 
-## SNMPv3 Connection
-
-For secure communication, use SNMPv3 with authentication and encryption:
+### GET Operation
 
 ```go
-client := snmp.NewClient(
-    snmp.WithTarget("192.168.1.1"),
-    snmp.WithVersion(snmp.Version3),
-    snmp.WithSecurityLevel(snmp.AuthPriv),
-    snmp.WithSecurityName("admin"),
-    snmp.WithAuth(snmp.AuthSHA256, "authpassword"),
-    snmp.WithPrivacy(snmp.PrivAES256, "privpassword"),
-)
-```
-
-## GET Operation
-
-Retrieve values by OID:
-
-```go
-// Get single OID
-result, err := client.Get(ctx, "1.3.6.1.2.1.1.1.0")
+// Simple GET
+vars, err := client.Get(ctx, snmp.OIDSysDescr)
 if err != nil {
     log.Fatal(err)
 }
-log.Printf("Value: %v", result[0].Value)
 
-// Get multiple OIDs
-result, err := client.Get(ctx,
+for _, v := range vars {
+    fmt.Printf("%s = %v\n", v.OID, v.Value)
+}
+
+// Multiple GET
+vars, err := client.Get(ctx,
     snmp.OIDSysDescr,
     snmp.OIDSysName,
     snmp.OIDSysUpTime,
 )
+```
+
+### GET-NEXT Operation
+
+```go
+// GET-NEXT returns the next OID in the MIB
+vars, err := client.GetNext(ctx, snmp.OIDSysDescr)
 if err != nil {
     log.Fatal(err)
 }
 
-for _, vb := range result {
-    log.Printf("%s = %v", vb.OID, vb.Value)
-}
+// vars[0].OID will be 1.3.6.1.2.1.1.2.0 (sysObjectID)
 ```
 
-## GETNEXT Operation
-
-Get the next OID in the MIB tree:
+### GET-BULK Operation (v2c/v3 only)
 
 ```go
-result, err := client.GetNext(ctx, "1.3.6.1.2.1.1")
+// GET-BULK to retrieve multiple values efficiently
+vars, err := client.GetBulk(ctx, 0, 10, oid)
 if err != nil {
     log.Fatal(err)
 }
-log.Printf("Next OID: %s = %v", result[0].OID, result[0].Value)
 ```
 
-## GETBULK Operation (v2c/v3)
-
-Efficiently retrieve multiple OIDs:
+### WALK Operation
 
 ```go
-// Get bulk with non-repeaters=0, max-repetitions=10
-result, err := client.GetBulk(ctx, 0, 10,
-    "1.3.6.1.2.1.2.2.1.2",  // ifDescr
-)
-if err != nil {
-    log.Fatal(err)
-}
+// Walk a subtree
+rootOID, _ := snmp.ParseOID("1.3.6.1.2.1.2.2") // ifTable
 
-for _, vb := range result {
-    log.Printf("%s = %v", vb.OID, vb.Value)
-}
-```
-
-## WALK Operation
-
-Traverse a MIB subtree:
-
-```go
-// Walk the interfaces table
-err := client.WalkFunc(ctx, "1.3.6.1.2.1.2.2", func(vb snmp.VarBind) error {
-    log.Printf("%s = %v", vb.OID, vb.Value)
+err := client.WalkFunc(ctx, rootOID, func(v snmp.Variable) error {
+    fmt.Printf("%s = %v\n", v.OID, v.Value)
     return nil
 })
-if err != nil {
-    log.Fatal(err)
+```
+
+### SET Operation
+
+```go
+// SET to modify a value
+vars := []snmp.Variable{
+    {
+        OID:   snmp.OIDSysContact,
+        Type:  snmp.TypeOctetString,
+        Value: []byte("admin@example.com"),
+    },
 }
 
-// Or get all results at once
-results, err := client.Walk(ctx, "1.3.6.1.2.1.2.2")
+result, err := client.Set(ctx, vars...)
 if err != nil {
     log.Fatal(err)
-}
-for _, vb := range results {
-    log.Printf("%s = %v", vb.OID, vb.Value)
 }
 ```
 
-## SET Operation
+## SNMPv3 Client
 
-Modify OID values:
+### AuthNoPriv Authentication
 
 ```go
-// Set system contact
-err := client.Set(ctx, snmp.VarBind{
-    OID:   snmp.OIDSysContact,
-    Type:  snmp.TypeOctetString,
-    Value: "admin@example.com",
-})
-if err != nil {
-    log.Fatal(err)
-}
-
-// Set multiple values
-err := client.Set(ctx,
-    snmp.VarBind{OID: snmp.OIDSysContact, Type: snmp.TypeOctetString, Value: "admin@example.com"},
-    snmp.VarBind{OID: snmp.OIDSysLocation, Type: snmp.TypeOctetString, Value: "Server Room"},
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
+    snmp.WithVersion(snmp.Version3),
+    snmp.WithSecurityName("admin"),
+    snmp.WithAuthProtocol(snmp.AuthSHA),
+    snmp.WithAuthPassword("authpassword"),
+    snmp.WithSecurityLevel(snmp.AuthNoPriv),
 )
 ```
 
-## Common OIDs
-
-The library provides constants for common OIDs:
+### AuthPriv Authentication
 
 ```go
-snmp.OIDSysDescr      // 1.3.6.1.2.1.1.1.0 - System description
-snmp.OIDSysObjectID   // 1.3.6.1.2.1.1.2.0 - System object ID
-snmp.OIDSysUpTime     // 1.3.6.1.2.1.1.3.0 - Uptime in ticks
-snmp.OIDSysContact    // 1.3.6.1.2.1.1.4.0 - Contact info
-snmp.OIDSysName       // 1.3.6.1.2.1.1.5.0 - System name
-snmp.OIDSysLocation   // 1.3.6.1.2.1.1.6.0 - Physical location
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
+    snmp.WithVersion(snmp.Version3),
+    snmp.WithSecurityName("admin"),
+    snmp.WithAuthProtocol(snmp.AuthSHA),
+    snmp.WithAuthPassword("authpassword"),
+    snmp.WithPrivProtocol(snmp.PrivAES),
+    snmp.WithPrivPassword("privpassword"),
+    snmp.WithSecurityLevel(snmp.AuthPriv),
+)
 ```
 
-## Data Types
+## Trap Reception
 
-SNMP supports various data types:
+```go
+package main
 
-| Type | Go Type | Description |
-|------|---------|-------------|
-| `Integer` | `int32` | 32-bit signed integer |
-| `OctetString` | `[]byte` | Byte sequence (often text) |
-| `ObjectIdentifier` | `string` | OID |
-| `IPAddress` | `net.IP` | IPv4 address |
-| `Counter32` | `uint32` | 32-bit counter |
-| `Counter64` | `uint64` | 64-bit counter (v2c/v3) |
-| `Gauge32` | `uint32` | 32-bit gauge |
-| `TimeTicks` | `uint32` | Time in hundredths of seconds |
+import (
+    "context"
+    "fmt"
+    "os"
+    "os/signal"
+    "syscall"
+
+    "github.com/edgeo-scada/snmp/snmp"
+)
+
+func main() {
+    ctx, cancel := context.WithCancel(context.Background())
+    defer cancel()
+
+    // Trap handler
+    handler := func(trap *snmp.TrapPDU) {
+        fmt.Printf("Trap received from %s\n", trap.AgentAddress)
+        fmt.Printf("  Type: %s\n", trap.Type)
+        for _, v := range trap.Variables {
+            fmt.Printf("  %s = %v\n", v.OID, v.Value)
+        }
+    }
+
+    // Create and start the listener
+    listener := snmp.NewTrapListener(handler,
+        snmp.WithListenAddress(":1162"),
+        snmp.WithTrapCommunity("public"),
+    )
+
+    if err := listener.Start(ctx); err != nil {
+        log.Fatal(err)
+    }
+
+    // Wait for interrupt
+    sigCh := make(chan os.Signal, 1)
+    signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+    <-sigCh
+
+    listener.Stop()
+}
+```
+
+## Connection Pool
+
+```go
+pool, err := snmp.NewPool(ctx,
+    snmp.WithPoolSize(10),
+    snmp.WithPoolTarget("192.168.1.1:161"),
+    snmp.WithPoolVersion(snmp.Version2c),
+    snmp.WithPoolCommunity("public"),
+)
+if err != nil {
+    log.Fatal(err)
+}
+defer pool.Close()
+
+// Acquire a client from the pool
+client, err := pool.Acquire(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+defer pool.Release(client)
+
+// Use the client...
+vars, err := client.Get(ctx, snmp.OIDSysDescr)
+```
 
 ## Error Handling
 
 ```go
-result, err := client.Get(ctx, oid)
+vars, err := client.Get(ctx, oid)
 if err != nil {
-    switch {
-    case errors.Is(err, snmp.ErrTimeout):
-        log.Println("Request timed out")
-    case errors.Is(err, snmp.ErrNoSuchObject):
-        log.Println("OID does not exist")
-    case errors.Is(err, snmp.ErrNoSuchInstance):
-        log.Println("Instance does not exist")
-    case errors.Is(err, snmp.ErrAuthenticationFailure):
-        log.Println("Authentication failed")
-    default:
-        log.Printf("Error: %v", err)
+    var snmpErr *snmp.SNMPError
+    if errors.As(err, &snmpErr) {
+        switch snmpErr.Status {
+        case snmp.ErrNoSuchName:
+            fmt.Println("OID not found")
+        case snmp.ErrTooBig:
+            fmt.Println("Response too large")
+        case snmp.ErrGenErr:
+            fmt.Println("General error")
+        default:
+            fmt.Printf("SNMP error: %s\n", snmpErr)
+        }
+    } else {
+        fmt.Printf("Network error: %v\n", err)
     }
 }
 ```
 
 ## Next Steps
 
-- Learn about the [Client API](client.md)
-- Configure [Options](options.md)
-- Use [Connection Pooling](pool.md)
-- Set up [Trap Listener](trap.md)
-- Try the [CLI Tool](cli.md)
+- [SNMP Client](client.md) - Complete client documentation
+- [Configuration Options](options.md) - All available options
+- [Connection Pool](pool.md) - Advanced connection management
+- [Trap Listener](trap-listener.md) - Receiving notifications

@@ -1,7 +1,3 @@
----
-sidebar_position: 3
----
-
 # OPC UA Client
 
 The OPC UA client allows connecting to OPC UA servers and performing read, write, browse, and subscription operations.
@@ -292,6 +288,14 @@ client, err := opcua.NewClient("localhost:4840",
     }),
     opcua.WithOnSessionActivated(func() {
         fmt.Println("Session activated!")
+    }),
+)
+```
+ect(func(err error) {
+        fmt.Printf("Déconnecté: %v\n", err)
+    }),
+    opcua.WithOnSessionActivated(func() {
+        fmt.Println("Session activée!")
     }),
 )
 ```

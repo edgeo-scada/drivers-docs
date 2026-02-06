@@ -1,7 +1,3 @@
----
-sidebar_position: 5
----
-
 # Connection Pool
 
 The connection pool allows reusing Modbus connections for better performance.

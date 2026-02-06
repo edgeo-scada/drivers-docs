@@ -1,7 +1,3 @@
----
-sidebar_position: 8
----
-
 # Metrics and Observability
 
 The package includes built-in metrics for monitoring.
@@ -151,7 +147,7 @@ package main
 import (
     "net/http"
 
-    "github.com/edgeo/drivers/modbus"
+    "github.com/edgeo-scada/modbus-tcp/modbus"
     "github.com/prometheus/client_golang/prometheus"
     "github.com/prometheus/client_golang/prometheus/promhttp"
 )

@@ -1,82 +1,78 @@
----
-sidebar_position: 8
----
+# Métriques
 
-# Metrics
+Le package OPC UA fournit des métriques intégrées pour le monitoring et l'observabilité.
 
-The OPC UA package provides built-in metrics for monitoring and observability.
-
-## Available Metrics
+## Métriques disponibles
 
 ### Client
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `requests_total` | Counter | Total number of requests |
-| `requests_success` | Counter | Number of successful requests |
-| `requests_errors` | Counter | Number of failed requests |
-| `reconnections` | Counter | Number of reconnections |
-| `active_connections` | Gauge | Active connections |
-| `active_sessions` | Gauge | Active sessions |
-| `active_subscriptions` | Gauge | Active subscriptions |
-| `monitored_items` | Gauge | Monitored items |
-| `latency` | Histogram | Request latency |
+| Métrique | Type | Description |
+|----------|------|-------------|
+| `requests_total` | Counter | Nombre total de requêtes |
+| `requests_success` | Counter | Nombre de requêtes réussies |
+| `requests_errors` | Counter | Nombre de requêtes en erreur |
+| `reconnections` | Counter | Nombre de reconnexions |
+| `active_connections` | Gauge | Connexions actives |
+| `active_sessions` | Gauge | Sessions actives |
+| `active_subscriptions` | Gauge | Subscriptions actives |
+| `monitored_items` | Gauge | Éléments surveillés |
+| `latency` | Histogram | Latence des requêtes |
 
-### Server
+### Serveur
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `connections_total` | Counter | Total connections received |
-| `active_connections` | Gauge | Active connections |
-| `active_sessions` | Gauge | Active sessions |
-| `active_subscriptions` | Gauge | Active subscriptions |
-| `monitored_items` | Gauge | Monitored items |
-| `requests_total` | Counter | Total requests processed |
-| `requests_by_service` | Counter | Requests by service type |
-| `publish_notifications` | Counter | Published notifications |
-| `bytes_received` | Counter | Bytes received |
-| `bytes_sent` | Counter | Bytes sent |
+| Métrique | Type | Description |
+|----------|------|-------------|
+| `connections_total` | Counter | Connexions totales reçues |
+| `active_connections` | Gauge | Connexions actives |
+| `active_sessions` | Gauge | Sessions actives |
+| `active_subscriptions` | Gauge | Subscriptions actives |
+| `monitored_items` | Gauge | Éléments surveillés |
+| `requests_total` | Counter | Requêtes totales traitées |
+| `requests_by_service` | Counter | Requêtes par type de service |
+| `publish_notifications` | Counter | Notifications publiées |
+| `bytes_received` | Counter | Octets reçus |
+| `bytes_sent` | Counter | Octets envoyés |
 
 ### Pool
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `pool_size` | Gauge | Configured pool size |
-| `active_connections` | Gauge | Connections in use |
-| `idle_connections` | Gauge | Waiting connections |
-| `total_connections` | Gauge | Total connections |
-| `wait_count` | Gauge | Requests waiting for a connection |
-| `avg_wait_time` | Gauge | Average wait time |
+| Métrique | Type | Description |
+|----------|------|-------------|
+| `pool_size` | Gauge | Taille configurée du pool |
+| `active_connections` | Gauge | Connexions en cours d'utilisation |
+| `idle_connections` | Gauge | Connexions en attente |
+| `total_connections` | Gauge | Total des connexions |
+| `wait_count` | Gauge | Requêtes en attente d'une connexion |
+| `avg_wait_time` | Gauge | Temps d'attente moyen |
 
-## Collecting Metrics
+## Collecte des métriques
 
 ### Client
 
 ```go
 client, _ := opcua.NewClient("localhost:4840")
 
-// Get metrics
+// Obtenir les métriques
 metrics := client.Metrics()
 
-// Collect all metrics
+// Collecter toutes les métriques
 all := metrics.Collect()
-fmt.Printf("Total requests: %v\n", all["requests_total"])
-fmt.Printf("Successful requests: %v\n", all["requests_success"])
-fmt.Printf("Failed requests: %v\n", all["requests_errors"])
-fmt.Printf("Reconnections: %v\n", all["reconnections"])
-fmt.Printf("Latency P50: %v\n", all["latency_p50"])
-fmt.Printf("Latency P99: %v\n", all["latency_p99"])
+fmt.Printf("Requêtes totales: %v\n", all["requests_total"])
+fmt.Printf("Requêtes réussies: %v\n", all["requests_success"])
+fmt.Printf("Requêtes erreurs: %v\n", all["requests_errors"])
+fmt.Printf("Reconnexions: %v\n", all["reconnections"])
+fmt.Printf("Latence P50: %v\n", all["latency_p50"])
+fmt.Printf("Latence P99: %v\n", all["latency_p99"])
 ```
 
-### Server
+### Serveur
 
 ```go
 server, _ := opcua.NewServer(...)
 
 stats := server.Metrics()
-fmt.Printf("Active sessions: %d\n", stats.ActiveSessions)
+fmt.Printf("Sessions actives: %d\n", stats.ActiveSessions)
 fmt.Printf("Subscriptions: %d\n", stats.ActiveSubscriptions)
-fmt.Printf("Requests processed: %d\n", stats.RequestsTotal)
+fmt.Printf("Requêtes traitées: %d\n", stats.RequestsTotal)
 ```
 
 ### Pool
@@ -85,14 +81,14 @@ fmt.Printf("Requests processed: %d\n", stats.RequestsTotal)
 pool, _ := opcua.NewPool("localhost:4840", ...)
 
 stats := pool.Stats()
-fmt.Printf("Active connections: %d\n", stats.ActiveConnections)
-fmt.Printf("Idle connections: %d\n", stats.IdleConnections)
-fmt.Printf("Average wait time: %v\n", stats.AvgWaitTime)
+fmt.Printf("Connexions actives: %d\n", stats.ActiveConnections)
+fmt.Printf("Connexions idle: %d\n", stats.IdleConnections)
+fmt.Printf("Temps d'attente moyen: %v\n", stats.AvgWaitTime)
 ```
 
-## Prometheus Integration
+## Intégration Prometheus
 
-### Exposing Metrics
+### Exposition des métriques
 
 ```go
 import (
@@ -101,7 +97,7 @@ import (
     "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-// Create Prometheus metrics
+// Créer les métriques Prometheus
 var (
     opcuaRequestsTotal = prometheus.NewCounter(prometheus.CounterOpts{
         Name: "opcua_requests_total",
@@ -124,7 +120,7 @@ func init() {
     prometheus.MustRegister(opcuaLatency)
 }
 
-// Collect periodically
+// Collecter périodiquement
 func collectMetrics(client *opcua.Client) {
     ticker := time.NewTicker(10 * time.Second)
     defer ticker.Stop()
@@ -146,7 +142,7 @@ func collectMetrics(client *opcua.Client) {
 }
 
 func main() {
-    // Expose metrics
+    // Exposer les métriques
     http.Handle("/metrics", promhttp.Handler())
     go http.ListenAndServe(":9090", nil)
 
@@ -154,7 +150,7 @@ func main() {
 }
 ```
 
-### Custom Collector
+### Collecteur personnalisé
 
 ```go
 type OPCUACollector struct {
@@ -200,7 +196,7 @@ func (c *OPCUACollector) Collect(ch chan<- prometheus.Metric) {
 }
 ```
 
-## OpenTelemetry Integration
+## Intégration OpenTelemetry
 
 ```go
 import (
@@ -230,18 +226,18 @@ func setupMetrics(client *opcua.Client) {
     // Observer callback
     _, _ = meter.RegisterCallback(func(_ context.Context, o metric.Observer) error {
         m := client.Metrics().Collect()
-        // Observe values...
+        // Observer les valeurs...
         return nil
     })
 }
 ```
 
-## Latency Histogram
+## Histogramme de latence
 
 ```go
 metrics := client.Metrics()
 
-// Access percentiles
+// Accès aux percentiles
 latency := metrics.Latency
 
 fmt.Printf("Min: %v\n", latency.Min())
@@ -253,7 +249,7 @@ fmt.Printf("P95: %v\n", latency.Percentile(95))
 fmt.Printf("P99: %v\n", latency.Percentile(99))
 ```
 
-## Metrics-based Alerts
+## Alertes basées sur les métriques
 
 ```go
 func monitorHealth(client *opcua.Client) {
@@ -263,20 +259,20 @@ func monitorHealth(client *opcua.Client) {
     for range ticker.C {
         m := client.Metrics().Collect()
 
-        // Alert if too many errors
+        // Alerter si trop d'erreurs
         errorRate := float64(m["requests_errors"].(uint64)) /
                      float64(m["requests_total"].(uint64))
         if errorRate > 0.05 {
             alerting.Send("OPC UA error rate high", errorRate)
         }
 
-        // Alert if latency high
+        // Alerter si latence élevée
         p99 := m["latency_p99"].(time.Duration)
         if p99 > 5*time.Second {
             alerting.Send("OPC UA latency high", p99)
         }
 
-        // Alert if not connected
+        // Alerter si pas de connexion
         if !client.IsConnected() {
             alerting.Send("OPC UA disconnected", nil)
         }
@@ -284,7 +280,7 @@ func monitorHealth(client *opcua.Client) {
 }
 ```
 
-## Complete Example
+## Exemple complet
 
 ```go
 package main
@@ -296,12 +292,12 @@ import (
     "net/http"
     "time"
 
-    "github.com/edgeo/drivers/opcua"
+    "github.com/edgeo-scada/opcua"
     "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
-    // Create the client
+    // Créer le client
     client, err := opcua.NewClient("localhost:4840",
         opcua.WithEndpoint("opc.tcp://localhost:4840"),
     )
@@ -315,27 +311,27 @@ func main() {
         log.Fatal(err)
     }
 
-    // Expose Prometheus metrics
+    // Exposer les métriques Prometheus
     http.Handle("/metrics", promhttp.Handler())
     go http.ListenAndServe(":9090", nil)
 
-    // Display metrics periodically
+    // Afficher les métriques périodiquement
     ticker := time.NewTicker(10 * time.Second)
     defer ticker.Stop()
 
     for range ticker.C {
         m := client.Metrics().Collect()
 
-        fmt.Println("=== OPC UA Metrics ===")
-        fmt.Printf("Total requests: %v\n", m["requests_total"])
-        fmt.Printf("Successful requests: %v\n", m["requests_success"])
-        fmt.Printf("Failed requests: %v\n", m["requests_errors"])
-        fmt.Printf("Reconnections: %v\n", m["reconnections"])
-        fmt.Printf("Active connections: %v\n", m["active_connections"])
-        fmt.Printf("Active sessions: %v\n", m["active_sessions"])
+        fmt.Println("=== Métriques OPC UA ===")
+        fmt.Printf("Requêtes totales: %v\n", m["requests_total"])
+        fmt.Printf("Requêtes réussies: %v\n", m["requests_success"])
+        fmt.Printf("Requêtes erreurs: %v\n", m["requests_errors"])
+        fmt.Printf("Reconnexions: %v\n", m["reconnections"])
+        fmt.Printf("Connexions actives: %v\n", m["active_connections"])
+        fmt.Printf("Sessions actives: %v\n", m["active_sessions"])
         fmt.Printf("Subscriptions: %v\n", m["active_subscriptions"])
-        fmt.Printf("Latency P50: %v\n", m["latency_p50"])
-        fmt.Printf("Latency P99: %v\n", m["latency_p99"])
+        fmt.Printf("Latence P50: %v\n", m["latency_p50"])
+        fmt.Printf("Latence P99: %v\n", m["latency_p99"])
         fmt.Println()
     }
 }

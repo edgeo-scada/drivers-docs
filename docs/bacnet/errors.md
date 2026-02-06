@@ -1,261 +1,357 @@
 # Error Handling
 
-The BACnet library provides detailed error types for proper error handling.
+The BACnet driver provides comprehensive error handling with sentinel errors, typed errors, and helper functions.
 
-## Error Types
+## Sentinel Errors
+
+These are predefined errors that can be checked using `errors.Is()`.
+
+```go
+import "errors"
+
+// Check for specific error
+if errors.Is(err, bacnet.ErrTimeout) {
+    // Handle timeout
+}
+```
 
 ### Connection Errors
 
-```go
-var (
-    // ErrNotConnected - Client is not connected
-    ErrNotConnected = errors.New("not connected")
-
-    // ErrTimeout - Request timed out
-    ErrTimeout = errors.New("timeout")
-
-    // ErrConnectionFailed - Connection failed
-    ErrConnectionFailed = errors.New("connection failed")
-)
-```
-
-### Device Errors
-
-```go
-var (
-    // ErrDeviceNotFound - Device not found on network
-    ErrDeviceNotFound = errors.New("device not found")
-
-    // ErrDeviceUnreachable - Device is unreachable
-    ErrDeviceUnreachable = errors.New("device unreachable")
-)
-```
-
-### Object Errors
-
-```go
-var (
-    // ErrObjectNotFound - Object does not exist on device
-    ErrObjectNotFound = errors.New("object not found")
-
-    // ErrPropertyNotFound - Property not supported by object
-    ErrPropertyNotFound = errors.New("property not found")
-
-    // ErrInvalidObjectType - Invalid object type
-    ErrInvalidObjectType = errors.New("invalid object type")
-)
-```
-
-### Value Errors
-
-```go
-var (
-    // ErrInvalidValue - Invalid value for property
-    ErrInvalidValue = errors.New("invalid value")
-
-    // ErrValueOutOfRange - Value outside valid range
-    ErrValueOutOfRange = errors.New("value out of range")
-
-    // ErrWriteAccessDenied - Write access denied
-    ErrWriteAccessDenied = errors.New("write access denied")
-
-    // ErrReadAccessDenied - Read access denied
-    ErrReadAccessDenied = errors.New("read access denied")
-)
-```
+| Error | Description |
+|-------|-------------|
+| `ErrNotConnected` | Client is not connected |
+| `ErrAlreadyConnected` | Client is already connected |
+| `ErrConnectionClosed` | Connection was closed unexpectedly |
+| `ErrTimeout` | Request timed out |
 
 ### Protocol Errors
 
+| Error | Description |
+|-------|-------------|
+| `ErrInvalidResponse` | Response could not be decoded |
+| `ErrInvalidAPDU` | Invalid APDU format |
+| `ErrInvalidNPDU` | Invalid NPDU format |
+| `ErrInvalidBVLC` | Invalid BVLC header |
+| `ErrSegmentationNotSupported` | Device doesn't support required segmentation |
+
+### Operation Errors
+
+| Error | Description |
+|-------|-------------|
+| `ErrDeviceNotFound` | Device not found on network |
+| `ErrPropertyNotFound` | Property does not exist |
+| `ErrWriteFailed` | Write operation failed |
+
+## BACnet Protocol Errors
+
+BACnet devices return errors with a class and code. These are wrapped in `BACnetError`.
+
 ```go
-var (
-    // ErrInvalidAPDU - Invalid APDU received
-    ErrInvalidAPDU = errors.New("invalid APDU")
+var bacnetErr *bacnet.BACnetError
+if errors.As(err, &bacnetErr) {
+    fmt.Printf("Error class: %s\n", bacnetErr.Class)
+    fmt.Printf("Error code: %s\n", bacnetErr.Code)
+}
+```
 
-    // ErrSegmentationNotSupported - Segmentation required but not supported
-    ErrSegmentationNotSupported = errors.New("segmentation not supported")
+### Error Classes
 
-    // ErrAbort - Request was aborted
-    ErrAbort = errors.New("request aborted")
+| Class | Description |
+|-------|-------------|
+| `ErrorClassDevice` | Device-related errors |
+| `ErrorClassObject` | Object-related errors |
+| `ErrorClassProperty` | Property-related errors |
+| `ErrorClassResources` | Resource constraint errors |
+| `ErrorClassSecurity` | Security/authentication errors |
+| `ErrorClassServices` | Service-related errors |
+| `ErrorClassVT` | Virtual terminal errors |
+| `ErrorClassCommunication` | Communication errors |
 
-    // ErrReject - Request was rejected
-    ErrReject = errors.New("request rejected")
-)
+### Common Error Codes
+
+#### Device Errors
+
+| Code | Description |
+|------|-------------|
+| `ErrorCodeConfigurationInProgress` | Device is being configured |
+| `ErrorCodeDeviceBusy` | Device is busy |
+
+#### Object Errors
+
+| Code | Description |
+|------|-------------|
+| `ErrorCodeUnknownObject` | Object does not exist |
+| `ErrorCodeNoObjectsOfSpecifiedType` | No objects of requested type |
+| `ErrorCodeObjectDeletionNotPermitted` | Cannot delete object |
+
+#### Property Errors
+
+| Code | Description |
+|------|-------------|
+| `ErrorCodeUnknownProperty` | Property does not exist |
+| `ErrorCodeReadAccessDenied` | Read access denied |
+| `ErrorCodeWriteAccessDenied` | Write access denied |
+| `ErrorCodeInvalidArrayIndex` | Array index out of bounds |
+| `ErrorCodeInvalidDataType` | Wrong data type for property |
+| `ErrorCodeValueOutOfRange` | Value outside allowed range |
+| `ErrorCodeDatatypeNotSupported` | Data type not supported |
+| `ErrorCodeNotCovProperty` | Property doesn't support COV |
+
+#### Resource Errors
+
+| Code | Description |
+|------|-------------|
+| `ErrorCodeNoSpaceForObject` | No space to create object |
+| `ErrorCodeNoSpaceToWriteProperty` | No space to write property |
+
+#### Security Errors
+
+| Code | Description |
+|------|-------------|
+| `ErrorCodeAuthenticationFailed` | Authentication failed |
+| `ErrorCodePasswordFailure` | Incorrect password |
+| `ErrorCodeSecurityNotSupported` | Security not supported |
+
+## Reject Errors
+
+Devices may reject requests. These are wrapped in `RejectError`.
+
+```go
+var rejectErr *bacnet.RejectError
+if errors.As(err, &rejectErr) {
+    fmt.Printf("Invoke ID: %d\n", rejectErr.InvokeID)
+    fmt.Printf("Reason: %s\n", rejectErr.Reason)
+}
+```
+
+### Reject Reasons
+
+| Reason | Description |
+|--------|-------------|
+| `RejectReasonBufferOverflow` | Request too large |
+| `RejectReasonInconsistentParameters` | Parameters don't make sense together |
+| `RejectReasonInvalidParameterDataType` | Wrong parameter type |
+| `RejectReasonInvalidTag` | Invalid ASN.1 tag |
+| `RejectReasonMissingRequiredParameter` | Required parameter missing |
+| `RejectReasonParameterOutOfRange` | Parameter value out of range |
+| `RejectReasonTooManyArguments` | Too many parameters |
+| `RejectReasonUndefinedEnumeration` | Invalid enumeration value |
+| `RejectReasonUnrecognizedService` | Service not supported |
+
+## Abort Errors
+
+Transactions may be aborted. These are wrapped in `AbortError`.
+
+```go
+var abortErr *bacnet.AbortError
+if errors.As(err, &abortErr) {
+    fmt.Printf("Invoke ID: %d\n", abortErr.InvokeID)
+    fmt.Printf("Server abort: %v\n", abortErr.Server)
+    fmt.Printf("Reason: %s\n", abortErr.Reason)
+}
+```
+
+### Abort Reasons
+
+| Reason | Description |
+|--------|-------------|
+| `AbortReasonBufferOverflow` | Buffer overflow |
+| `AbortReasonInvalidApduInThisState` | Invalid APDU for current state |
+| `AbortReasonPreemptedByHigherPriorityTask` | Preempted |
+| `AbortReasonSegmentationNotSupported` | Segmentation not supported |
+| `AbortReasonSecurityError` | Security error |
+| `AbortReasonInsufficientSecurity` | Insufficient security level |
+| `AbortReasonWindowSizeOutOfRange` | Window size invalid |
+| `AbortReasonApplicationExceededReplyTime` | Reply took too long |
+| `AbortReasonOutOfResources` | Out of resources |
+| `AbortReasonTsmTimeout` | Transaction state machine timeout |
+| `AbortReasonApduTooLong` | APDU too long |
+
+## Helper Functions
+
+### IsTimeout
+
+```go
+func IsTimeout(err error) bool
+```
+
+Returns true if the error is a timeout.
+
+```go
+if bacnet.IsTimeout(err) {
+    log.Println("Device not responding - check network connectivity")
+}
+```
+
+### IsDeviceNotFound
+
+```go
+func IsDeviceNotFound(err error) bool
+```
+
+Returns true if the device was not found. Checks both the sentinel error and BACnet error codes.
+
+```go
+if bacnet.IsDeviceNotFound(err) {
+    log.Println("Device not on network - verify device ID and network")
+}
+```
+
+### IsPropertyNotFound
+
+```go
+func IsPropertyNotFound(err error) bool
+```
+
+Returns true if the property was not found.
+
+```go
+if bacnet.IsPropertyNotFound(err) {
+    log.Println("Property not supported by this object")
+}
+```
+
+### IsAccessDenied
+
+```go
+func IsAccessDenied(err error) bool
+```
+
+Returns true if access was denied (read or write).
+
+```go
+if bacnet.IsAccessDenied(err) {
+    log.Println("Permission denied - check device security settings")
+}
 ```
 
 ## Error Handling Patterns
 
-### Basic Error Handling
+### Comprehensive Error Handling
 
 ```go
-value, err := client.ReadProperty(ctx, deviceID, object, property)
-if err != nil {
-    log.Printf("Read error: %v", err)
-    return
-}
-```
-
-### Type-Based Error Handling
-
-```go
-value, err := client.ReadProperty(ctx, deviceID, object, property)
+value, err := client.ReadProperty(ctx, deviceID, objectID, propertyID)
 if err != nil {
     switch {
-    case errors.Is(err, bacnet.ErrDeviceNotFound):
-        log.Printf("Device %d not found on network", deviceID)
-        log.Println("- Verify device is online")
-        log.Println("- Check network connectivity")
-        log.Println("- Try running WhoIs discovery")
+    case bacnet.IsTimeout(err):
+        return fmt.Errorf("device %d not responding: %w", deviceID, err)
 
-    case errors.Is(err, bacnet.ErrTimeout):
-        log.Printf("Request timed out")
-        log.Println("- Device may be slow or busy")
-        log.Println("- Try increasing timeout")
+    case bacnet.IsDeviceNotFound(err):
+        return fmt.Errorf("device %d not found on network: %w", deviceID, err)
 
-    case errors.Is(err, bacnet.ErrObjectNotFound):
-        log.Printf("Object %s does not exist on device", object)
-        log.Println("- Verify object identifier")
-        log.Println("- Check device object list")
+    case bacnet.IsPropertyNotFound(err):
+        return fmt.Errorf("property %s not supported: %w", propertyID, err)
 
-    case errors.Is(err, bacnet.ErrPropertyNotFound):
-        log.Printf("Property %s not supported by object", property)
-        log.Println("- Not all properties are available on all objects")
-
-    case errors.Is(err, bacnet.ErrReadAccessDenied):
-        log.Printf("Read access denied for %s.%s", object, property)
-        log.Println("- Check device security settings")
+    case bacnet.IsAccessDenied(err):
+        return fmt.Errorf("access denied to %s: %w", objectID, err)
 
     default:
-        log.Printf("Error: %v", err)
+        // Check for specific BACnet errors
+        var bacnetErr *bacnet.BACnetError
+        if errors.As(err, &bacnetErr) {
+            return fmt.Errorf("BACnet error [%s/%s]: %w",
+                bacnetErr.Class, bacnetErr.Code, err)
+        }
+        return fmt.Errorf("unexpected error: %w", err)
     }
 }
 ```
 
-### Write Error Handling
+### Retry Logic
 
 ```go
-err := client.WriteProperty(ctx, deviceID, object, property, value)
-if err != nil {
-    switch {
-    case errors.Is(err, bacnet.ErrWriteAccessDenied):
-        log.Println("Write access denied")
-        log.Println("- Object may be read-only")
-        log.Println("- Check device security settings")
-
-    case errors.Is(err, bacnet.ErrValueOutOfRange):
-        log.Printf("Value %v is out of range", value)
-        log.Println("- Check high-limit and low-limit properties")
-
-    case errors.Is(err, bacnet.ErrInvalidValue):
-        log.Printf("Invalid value type for property")
-        log.Println("- Check expected data type")
-
-    default:
-        log.Printf("Write error: %v", err)
-    }
-}
-```
-
-## BACnet Error Codes
-
-The library maps BACnet error codes to Go errors:
-
-| BACnet Error | Go Error | Description |
-|--------------|----------|-------------|
-| unknown-object | `ErrObjectNotFound` | Object doesn't exist |
-| unknown-property | `ErrPropertyNotFound` | Property not supported |
-| value-out-of-range | `ErrValueOutOfRange` | Value outside limits |
-| write-access-denied | `ErrWriteAccessDenied` | Cannot write to property |
-| read-access-denied | `ErrReadAccessDenied` | Cannot read property |
-| invalid-data-type | `ErrInvalidValue` | Wrong data type |
-| communication-disabled | `ErrDeviceUnreachable` | Device not responding |
-
-## BACnet Abort Reasons
-
-```go
-// Abort reasons
-const (
-    AbortReasonOther                   = 0
-    AbortReasonBufferOverflow          = 1
-    AbortReasonInvalidAPDUInThisState  = 2
-    AbortReasonPreemptedByHigherPriority = 3
-    AbortReasonSegmentationNotSupported = 4
-)
-```
-
-## BACnet Reject Reasons
-
-```go
-// Reject reasons
-const (
-    RejectReasonOther                    = 0
-    RejectReasonBufferOverflow           = 1
-    RejectReasonInconsistentParameters   = 2
-    RejectReasonInvalidParameterDataType = 3
-    RejectReasonInvalidTag               = 4
-    RejectReasonMissingRequiredParameter = 5
-    RejectReasonParameterOutOfRange      = 6
-    RejectReasonTooManyArguments         = 7
-    RejectReasonUndefinedEnumeration     = 8
-    RejectReasonUnrecognizedService      = 9
-)
-```
-
-## Retry with Backoff
-
-```go
-func readWithRetry(ctx context.Context, client *bacnet.Client, deviceID uint32, object bacnet.ObjectIdentifier, property bacnet.PropertyIdentifier) (interface{}, error) {
+func readWithRetry(ctx context.Context, client *bacnet.Client, deviceID uint32, objectID bacnet.ObjectIdentifier, propertyID bacnet.PropertyIdentifier) (interface{}, error) {
     var lastErr error
-    backoff := 100 * time.Millisecond
 
-    for attempt := 0; attempt < 5; attempt++ {
-        value, err := client.ReadProperty(ctx, deviceID, object, property)
+    for attempt := 0; attempt < 3; attempt++ {
+        value, err := client.ReadProperty(ctx, deviceID, objectID, propertyID)
         if err == nil {
             return value, nil
         }
 
         lastErr = err
 
-        // Don't retry on permanent errors
-        if errors.Is(err, bacnet.ErrObjectNotFound) ||
-           errors.Is(err, bacnet.ErrPropertyNotFound) ||
-           errors.Is(err, bacnet.ErrReadAccessDenied) {
+        // Don't retry on certain errors
+        if bacnet.IsDeviceNotFound(err) ||
+           bacnet.IsPropertyNotFound(err) ||
+           bacnet.IsAccessDenied(err) {
             return nil, err
         }
 
-        log.Printf("Attempt %d failed: %v, retrying in %v", attempt+1, err, backoff)
+        // Retry on timeout or transient errors
+        if bacnet.IsTimeout(err) {
+            time.Sleep(time.Duration(attempt+1) * 500 * time.Millisecond)
+            continue
+        }
 
-        select {
-        case <-ctx.Done():
-            return nil, ctx.Err()
-        case <-time.After(backoff):
-            backoff *= 2
-            if backoff > 5*time.Second {
-                backoff = 5 * time.Second
+        // Check if device is busy
+        var bacnetErr *bacnet.BACnetError
+        if errors.As(err, &bacnetErr) {
+            if bacnetErr.Code == bacnet.ErrorCodeDeviceBusy {
+                time.Sleep(time.Duration(attempt+1) * time.Second)
+                continue
             }
         }
+
+        // Unknown error - don't retry
+        return nil, err
     }
 
-    return nil, fmt.Errorf("all retries failed: %w", lastErr)
+    return nil, fmt.Errorf("max retries exceeded: %w", lastErr)
 }
 ```
 
-## Error Context
-
-Wrap errors with additional context:
+### Error Logging
 
 ```go
-value, err := client.ReadProperty(ctx, deviceID, object, property)
-if err != nil {
-    return fmt.Errorf("failed to read %s.%s from device %d: %w",
-        object, property, deviceID, err)
+func logBACnetError(logger *slog.Logger, operation string, err error) {
+    if err == nil {
+        return
+    }
+
+    attrs := []any{
+        slog.String("operation", operation),
+        slog.String("error", err.Error()),
+    }
+
+    var bacnetErr *bacnet.BACnetError
+    if errors.As(err, &bacnetErr) {
+        attrs = append(attrs,
+            slog.String("error_class", bacnetErr.Class.String()),
+            slog.String("error_code", bacnetErr.Code.String()),
+        )
+    }
+
+    var rejectErr *bacnet.RejectError
+    if errors.As(err, &rejectErr) {
+        attrs = append(attrs,
+            slog.Uint64("invoke_id", uint64(rejectErr.InvokeID)),
+            slog.String("reject_reason", rejectErr.Reason.String()),
+        )
+    }
+
+    var abortErr *bacnet.AbortError
+    if errors.As(err, &abortErr) {
+        attrs = append(attrs,
+            slog.Uint64("invoke_id", uint64(abortErr.InvokeID)),
+            slog.Bool("server", abortErr.Server),
+            slog.String("abort_reason", abortErr.Reason.String()),
+        )
+    }
+
+    logger.Error("BACnet operation failed", attrs...)
 }
 ```
 
-## Best Practices
+## Creating Custom Errors
 
-1. **Always check errors** - Never ignore return errors
-2. **Use errors.Is()** - For type-safe error comparison
-3. **Add context** - Wrap errors with relevant information
-4. **Handle gracefully** - Provide meaningful messages
-5. **Retry transient errors** - Timeouts may be temporary
-6. **Log appropriately** - Log errors for debugging
+```go
+// Create a BACnet error
+err := bacnet.NewBACnetError(
+    bacnet.ErrorClassProperty,
+    bacnet.ErrorCodeUnknownProperty,
+)
+
+// Error message: "bacnet error: class=property, code=unknown-property"
+fmt.Println(err.Error())
+```

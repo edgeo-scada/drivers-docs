@@ -1,7 +1,3 @@
----
-sidebar_position: 6
----
-
 # Configuration
 
 The OPC UA client and server use the functional options pattern for configuration.

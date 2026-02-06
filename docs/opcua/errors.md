@@ -1,27 +1,23 @@
----
-sidebar_position: 7
----
+# Gestion des erreurs
 
-# Error Handling
+Le package OPC UA fournit une gestion complète des erreurs avec des types d'erreur spécifiques et des status codes OPC UA.
 
-The OPC UA package provides comprehensive error handling with specific error types and OPC UA status codes.
+## Types d'erreur
 
-## Error Types
-
-### Connection Errors
+### Erreurs de connexion
 
 ```go
 var (
-    // Connection already closed
+    // Connexion déjà fermée
     ErrConnectionClosed = errors.New("opcua: connection closed")
 
-    // Not connected
+    // Non connecté
     ErrNotConnected = errors.New("opcua: not connected")
 
-    // Maximum retry count reached
+    // Nombre maximum de tentatives atteint
     ErrMaxRetriesExceeded = errors.New("opcua: max retries exceeded")
 
-    // Invalid response
+    // Réponse invalide
     ErrInvalidResponse = errors.New("opcua: invalid response")
 
     // Timeout
@@ -29,9 +25,9 @@ var (
 )
 ```
 
-### OPC UA Errors
+### Erreurs OPC UA
 
-The `OPCUAError` type encapsulates OPC UA protocol errors:
+Le type `OPCUAError` encapsule les erreurs du protocole OPC UA:
 
 ```go
 type OPCUAError struct {
@@ -48,102 +44,102 @@ func (e *OPCUAError) Error() string {
 
 ## Status Codes
 
-### Status Checking
+### Vérification du status
 
 ```go
 if result.StatusCode.IsBad() {
-    // Error
+    // Erreur
 }
 
 if result.StatusCode.IsUncertain() {
-    // Uncertain result
+    // Résultat incertain
 }
 
 if result.StatusCode.IsGood() {
-    // Success
+    // Succès
 }
 ```
 
-### Common Status Codes
+### Status codes courants
 
-| Code | Name | Description |
-|------|------|-------------|
-| 0x00000000 | Good | Success |
-| 0x80010000 | BadUnexpectedError | Unexpected error |
-| 0x80020000 | BadInternalError | Internal error |
-| 0x80030000 | BadOutOfMemory | Out of memory |
-| 0x80040000 | BadResourceUnavailable | Resource unavailable |
-| 0x80050000 | BadCommunicationError | Communication error |
-| 0x80060000 | BadEncodingError | Encoding error |
-| 0x80070000 | BadDecodingError | Decoding error |
-| 0x80080000 | BadEncodingLimitsExceeded | Encoding limits exceeded |
-| 0x80090000 | BadRequestTooLarge | Request too large |
-| 0x800A0000 | BadResponseTooLarge | Response too large |
-| 0x800B0000 | BadUnknownResponse | Unknown response |
+| Code | Nom | Description |
+|------|-----|-------------|
+| 0x00000000 | Good | Succès |
+| 0x80010000 | BadUnexpectedError | Erreur inattendue |
+| 0x80020000 | BadInternalError | Erreur interne |
+| 0x80030000 | BadOutOfMemory | Mémoire insuffisante |
+| 0x80040000 | BadResourceUnavailable | Ressource non disponible |
+| 0x80050000 | BadCommunicationError | Erreur de communication |
+| 0x80060000 | BadEncodingError | Erreur d'encodage |
+| 0x80070000 | BadDecodingError | Erreur de décodage |
+| 0x80080000 | BadEncodingLimitsExceeded | Limites d'encodage dépassées |
+| 0x80090000 | BadRequestTooLarge | Requête trop grande |
+| 0x800A0000 | BadResponseTooLarge | Réponse trop grande |
+| 0x800B0000 | BadUnknownResponse | Réponse inconnue |
 | 0x80100000 | BadTimeout | Timeout |
-| 0x80110000 | BadServiceUnsupported | Service not supported |
-| 0x80120000 | BadShutdown | Shutting down |
-| 0x80130000 | BadServerNotConnected | Server not connected |
-| 0x80140000 | BadServerHalted | Server halted |
-| 0x80150000 | BadNothingToDo | Nothing to do |
-| 0x80160000 | BadTooManyOperations | Too many operations |
+| 0x80110000 | BadServiceUnsupported | Service non supporté |
+| 0x80120000 | BadShutdown | Arrêt en cours |
+| 0x80130000 | BadServerNotConnected | Serveur non connecté |
+| 0x80140000 | BadServerHalted | Serveur arrêté |
+| 0x80150000 | BadNothingToDo | Rien à faire |
+| 0x80160000 | BadTooManyOperations | Trop d'opérations |
 
-### Session Status Codes
+### Status codes de session
 
-| Code | Name | Description |
-|------|------|-------------|
-| 0x80250000 | BadSessionIdInvalid | Invalid session ID |
-| 0x80260000 | BadSessionClosed | Session closed |
-| 0x80270000 | BadSessionNotActivated | Session not activated |
-| 0x80280000 | BadSubscriptionIdInvalid | Invalid subscription ID |
+| Code | Nom | Description |
+|------|-----|-------------|
+| 0x80250000 | BadSessionIdInvalid | Session ID invalide |
+| 0x80260000 | BadSessionClosed | Session fermée |
+| 0x80270000 | BadSessionNotActivated | Session non activée |
+| 0x80280000 | BadSubscriptionIdInvalid | Subscription ID invalide |
 
-### Node Status Codes
+### Status codes de noeud
 
-| Code | Name | Description |
-|------|------|-------------|
-| 0x80330000 | BadNodeIdInvalid | Invalid NodeID |
-| 0x80340000 | BadNodeIdUnknown | Unknown NodeID |
-| 0x80350000 | BadAttributeIdInvalid | Invalid AttributeID |
-| 0x80360000 | BadIndexRangeInvalid | Invalid index range |
-| 0x80370000 | BadIndexRangeNoData | No data in index range |
-| 0x803C0000 | BadNotReadable | Not readable |
-| 0x803D0000 | BadNotWritable | Not writable |
-| 0x803E0000 | BadOutOfRange | Out of range |
-| 0x803F0000 | BadNotSupported | Not supported |
+| Code | Nom | Description |
+|------|-----|-------------|
+| 0x80330000 | BadNodeIdInvalid | NodeID invalide |
+| 0x80340000 | BadNodeIdUnknown | NodeID inconnu |
+| 0x80350000 | BadAttributeIdInvalid | AttributeID invalide |
+| 0x80360000 | BadIndexRangeInvalid | Index range invalide |
+| 0x80370000 | BadIndexRangeNoData | Pas de données dans l'index range |
+| 0x803C0000 | BadNotReadable | Non lisible |
+| 0x803D0000 | BadNotWritable | Non écrivable |
+| 0x803E0000 | BadOutOfRange | Hors limites |
+| 0x803F0000 | BadNotSupported | Non supporté |
 
-## Error Handling
+## Gestion des erreurs
 
-### Basic Pattern
+### Pattern basique
 
 ```go
 results, err := client.Read(ctx, nodesToRead)
 if err != nil {
-    // Communication or protocol error
-    log.Printf("Read error: %v", err)
+    // Erreur de communication ou de protocole
+    log.Printf("Erreur de lecture: %v", err)
     return err
 }
 
-// Check the status of each result
+// Vérifier le status de chaque résultat
 for i, result := range results {
     if result.StatusCode.IsBad() {
-        log.Printf("Error on node %d: %s", i, result.StatusCode)
+        log.Printf("Erreur sur noeud %d: %s", i, result.StatusCode)
     }
 }
 ```
 
-### Error Type Identification
+### Identification du type d'erreur
 
 ```go
 results, err := client.Read(ctx, nodesToRead)
 if err != nil {
     var opcuaErr *opcua.OPCUAError
     if errors.As(err, &opcuaErr) {
-        // Specific OPC UA error
+        // Erreur OPC UA spécifique
         fmt.Printf("Service: %s\n", opcuaErr.Service)
         fmt.Printf("Status: %s\n", opcuaErr.StatusCode)
         fmt.Printf("Message: %s\n", opcuaErr.Message)
     } else if errors.Is(err, opcua.ErrConnectionClosed) {
-        // Connection closed
+        // Connexion fermée
         return reconnect()
     } else if errors.Is(err, context.DeadlineExceeded) {
         // Timeout
@@ -152,24 +148,24 @@ if err != nil {
 }
 ```
 
-### Reconnection Errors
+### Erreurs de reconnexion
 
 ```go
 if err := client.Connect(ctx); err != nil {
     var netErr net.Error
     if errors.As(err, &netErr) && netErr.Timeout() {
-        // Network timeout
-        log.Println("Connection timeout")
+        // Timeout réseau
+        log.Println("Timeout de connexion")
     } else if errors.Is(err, syscall.ECONNREFUSED) {
-        // Connection refused
-        log.Println("Server unavailable")
+        // Connexion refusée
+        log.Println("Serveur non disponible")
     }
 }
 ```
 
-## Automatic Retry
+## Retry automatique
 
-The client supports automatic reconnection:
+Le client supporte la reconnexion automatique:
 
 ```go
 client, err := opcua.NewClient("localhost:4840",
@@ -180,10 +176,10 @@ client, err := opcua.NewClient("localhost:4840",
 )
 ```
 
-## Error Logging
+## Logging des erreurs
 
 ```go
-// Configure logger with level
+// Configuration du logger avec niveau
 logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
     Level: slog.LevelDebug,
 }))
@@ -193,7 +189,7 @@ client, _ := opcua.NewClient("localhost:4840",
 )
 ```
 
-Errors are automatically logged with their context:
+Les erreurs sont automatiquement loggées avec leur contexte:
 
 ```json
 {
@@ -206,22 +202,22 @@ Errors are automatically logged with their context:
 }
 ```
 
-## Custom Status Codes
+## Status codes personnalisés
 
 ```go
-// Create a status code
+// Créer un status code
 status := opcua.StatusCode(0x80330000) // BadNodeIdInvalid
 
-// Check flags
+// Vérifier les flags
 fmt.Printf("Is Bad: %v\n", status.IsBad())
 fmt.Printf("Is Uncertain: %v\n", status.IsUncertain())
 fmt.Printf("Is Good: %v\n", status.IsGood())
 
-// Get message
+// Obtenir le message
 fmt.Printf("Message: %s\n", status.String())
 ```
 
-## Complete Example
+## Exemple complet
 
 ```go
 func readWithErrorHandling(client *opcua.Client, nodeID opcua.NodeID) (*opcua.DataValue, error) {
@@ -230,39 +226,39 @@ func readWithErrorHandling(client *opcua.Client, nodeID opcua.NodeID) (*opcua.Da
 
     value, err := client.ReadValue(ctx, nodeID)
     if err != nil {
-        // Classify the error
+        // Classifier l'erreur
         var opcuaErr *opcua.OPCUAError
         if errors.As(err, &opcuaErr) {
             switch {
             case opcuaErr.StatusCode == opcua.BadNodeIdUnknown:
-                return nil, fmt.Errorf("node %s not found", nodeID)
+                return nil, fmt.Errorf("noeud %s non trouvé", nodeID)
             case opcuaErr.StatusCode == opcua.BadNotReadable:
-                return nil, fmt.Errorf("node %s not readable", nodeID)
+                return nil, fmt.Errorf("noeud %s non lisible", nodeID)
             case opcuaErr.StatusCode == opcua.BadSessionIdInvalid:
-                // Attempt reconnection
+                // Tenter une reconnexion
                 if err := client.ConnectAndActivateSession(ctx); err != nil {
-                    return nil, fmt.Errorf("reconnection failed: %w", err)
+                    return nil, fmt.Errorf("reconnexion échouée: %w", err)
                 }
                 return readWithErrorHandling(client, nodeID) // Retry
             default:
-                return nil, fmt.Errorf("OPC UA error: %w", err)
+                return nil, fmt.Errorf("erreur OPC UA: %w", err)
             }
         }
 
         if errors.Is(err, context.DeadlineExceeded) {
-            return nil, fmt.Errorf("timeout reading %s", nodeID)
+            return nil, fmt.Errorf("timeout lors de la lecture de %s", nodeID)
         }
 
-        return nil, fmt.Errorf("unexpected error: %w", err)
+        return nil, fmt.Errorf("erreur inattendue: %w", err)
     }
 
-    // Check value status
+    // Vérifier le status de la valeur
     if value.StatusCode.IsBad() {
-        return nil, fmt.Errorf("invalid value: %s", value.StatusCode)
+        return nil, fmt.Errorf("valeur invalide: %s", value.StatusCode)
     }
 
     if value.StatusCode.IsUncertain() {
-        log.Printf("Warning: uncertain value for %s: %s", nodeID, value.StatusCode)
+        log.Printf("Attention: valeur incertaine pour %s: %s", nodeID, value.StatusCode)
     }
 
     return value, nil

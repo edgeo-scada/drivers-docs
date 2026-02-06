@@ -1,197 +1,247 @@
 # Getting Started
 
-This guide will help you get started with the S7 client library.
+## Prerequisites
+
+- Go 1.21 or higher
 
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/s7
+go get github.com/edgeo-scada/s7/s7
 ```
 
-## Basic Connection
+## S7 Client
+
+### Basic Connection
 
 ```go
 package main
 
 import (
     "context"
+    "fmt"
     "log"
+    "time"
 
-    "github.com/edgeo/drivers/s7/s7"
+    "github.com/edgeo-scada/s7/s7"
 )
 
 func main() {
-    // Create client for S7-1200/1500 (rack 0, slot 1)
-    client := s7.NewClient(
-        "192.168.1.10",
+    // Create the client
+    client, err := s7.NewClient("192.168.1.100:102",
         s7.WithRack(0),
         s7.WithSlot(1),
         s7.WithTimeout(5*time.Second),
     )
-
-    // Connect to the PLC
-    ctx := context.Background()
-    if err := client.Connect(ctx); err != nil {
-        log.Fatalf("Connection failed: %v", err)
+    if err != nil {
+        log.Fatal(err)
     }
     defer client.Close()
 
-    log.Println("Connected to S7 PLC")
+    // Connect
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    if err := client.Connect(ctx); err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Println("Connected!")
+    fmt.Printf("Negotiated PDU size: %d\n", client.PDUSize())
 }
 ```
 
-## PLC Configuration
-
-Different S7 PLCs require different rack/slot configurations:
-
-| PLC Model | Rack | Slot |
-|-----------|------|------|
-| S7-200 | 0 | 0 |
-| S7-200 Smart | 0 | 0 |
-| S7-300 | 0 | 2 |
-| S7-400 | 0 | 2 or 3 |
-| S7-1200 | 0 | 1 |
-| S7-1500 | 0 | 1 |
-| LOGO! | 0 | 0 |
-
-## Memory Addressing
-
-S7 PLCs organize memory into areas. Each area uses a specific addressing format:
-
-### Data Blocks (DB)
+### Reading Data
 
 ```go
-// Read byte at DB1.DBB0
-data, err := client.ReadDB(ctx, 1, 0, 1)
+// Read 10 bytes from DB1 at address 0
+data, err := client.ReadDB(ctx, 1, 0, 10)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Data: %v\n", data)
 
-// Read word (2 bytes) at DB1.DBW10
-data, err := client.ReadDB(ctx, 1, 10, 2)
+// Read process inputs (I0.0 to I3.7)
+inputs, err := client.ReadInputs(ctx, 0, 4)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Inputs: %v\n", inputs)
 
-// Read double word (4 bytes) at DB1.DBD100
-data, err := client.ReadDB(ctx, 1, 100, 4)
+// Read process outputs
+outputs, err := client.ReadOutputs(ctx, 0, 4)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Outputs: %v\n", outputs)
+
+// Read markers (flags)
+markers, err := client.ReadMarkers(ctx, 0, 8)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Markers: %v\n", markers)
 ```
 
-### Process Inputs (I)
+### Reading Typed Values
 
 ```go
-// Read input byte at IB0
-data, err := client.ReadInputs(ctx, 0, 1)
+// Read a 16-bit integer (INT)
+intVal, err := client.ReadInt16(ctx, s7.AreaDB, 1, 100)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("INT: %d\n", intVal)
 
-// Read input word at IW10
-data, err := client.ReadInputs(ctx, 10, 2)
+// Read a 32-bit integer (DINT)
+dintVal, err := client.ReadInt32(ctx, s7.AreaDB, 1, 102)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("DINT: %d\n", dintVal)
+
+// Read a 32-bit real (REAL)
+realVal, err := client.ReadFloat32(ctx, s7.AreaDB, 1, 106)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("REAL: %f\n", realVal)
+
+// Read a 64-bit real (LREAL)
+lrealVal, err := client.ReadFloat64(ctx, s7.AreaDB, 1, 110)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("LREAL: %f\n", lrealVal)
+
+// Read a boolean (bit)
+boolVal, err := client.ReadBool(ctx, s7.AreaDB, 1, 118, 0) // DB1.DBX118.0
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("BOOL: %v\n", boolVal)
+
+// Read an S7 string
+strVal, err := client.ReadString(ctx, s7.AreaDB, 1, 120, 32) // String[32]
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("STRING: %s\n", strVal)
 ```
 
-### Process Outputs (Q)
+### Writing Data
 
 ```go
-// Read output byte at QB0
-data, err := client.ReadOutputs(ctx, 0, 1)
-
-// Write to output byte QB0
-err := client.WriteOutputs(ctx, 0, []byte{0xFF})
-```
-
-### Markers (M)
-
-```go
-// Read marker byte at MB0
-data, err := client.ReadMarkers(ctx, 0, 1)
-
-// Write to marker word at MW10
-err := client.WriteMarkers(ctx, 10, []byte{0x01, 0x02})
-```
-
-## Reading Typed Values
-
-The client provides typed read methods for common data types:
-
-```go
-// Read boolean (bit)
-value, err := client.ReadBool(ctx, s7.AreaDB, 1, 0, 0) // DB1.DBX0.0
-
-// Read 16-bit integer
-value, err := client.ReadInt16(ctx, s7.AreaDB, 1, 10) // DB1.DBW10
-
-// Read 32-bit integer
-value, err := client.ReadInt32(ctx, s7.AreaDB, 1, 100) // DB1.DBD100
-
-// Read 32-bit float
-value, err := client.ReadFloat32(ctx, s7.AreaDB, 1, 200) // DB1.DBD200
-
-// Read 64-bit float
-value, err := client.ReadFloat64(ctx, s7.AreaDB, 1, 300) // DB1.DBD300
-```
-
-## Writing Typed Values
-
-```go
-// Write boolean
-err := client.WriteBool(ctx, s7.AreaDB, 1, 0, 0, true) // DB1.DBX0.0
-
-// Write 16-bit integer
-err := client.WriteInt16(ctx, s7.AreaDB, 1, 10, 1234) // DB1.DBW10
-
-// Write 32-bit float
-err := client.WriteFloat32(ctx, s7.AreaDB, 1, 200, 23.5) // DB1.DBD200
-```
-
-## Multi-Item Operations
-
-Read or write multiple items in a single request for better performance:
-
-```go
-// Define items to read
-items := []s7.ReadItem{
-    {Area: s7.AreaDB, DBNumber: 1, Start: 0, Length: 10},
-    {Area: s7.AreaDB, DBNumber: 1, Start: 100, Length: 4},
-    {Area: s7.AreaInputs, Start: 0, Length: 2},
+// Write raw bytes to DB1
+err := client.WriteDB(ctx, 1, 0, []byte{0x01, 0x02, 0x03})
+if err != nil {
+    log.Fatal(err)
 }
 
-// Read all items
+// Write an INT
+err = client.WriteInt16(ctx, s7.AreaDB, 1, 100, 1234)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Write a REAL
+err = client.WriteFloat32(ctx, s7.AreaDB, 1, 106, 3.14)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Write a bit
+err = client.WriteBool(ctx, s7.AreaDB, 1, 118, 0, true) // DB1.DBX118.0 = TRUE
+if err != nil {
+    log.Fatal(err)
+}
+
+// Write a string
+err = client.WriteString(ctx, s7.AreaDB, 1, 120, 32, "Hello PLC!")
+if err != nil {
+    log.Fatal(err)
+}
+
+// Write to outputs
+err = client.WriteOutputs(ctx, 0, []byte{0xFF}) // QB0 = 255
+if err != nil {
+    log.Fatal(err)
+}
+
+// Write to markers
+err = client.WriteMarkers(ctx, 0, []byte{0x55, 0xAA}) // MB0-MB1
+if err != nil {
+    log.Fatal(err)
+}
+```
+
+### Multi-Item Read
+
+For optimal performance, use multi-item reads:
+
+```go
+items := []s7.DataItem{
+    {Area: s7.AreaDB, DBNumber: 1, Start: 0, Amount: 10, WordLen: s7.TransportByte},
+    {Area: s7.AreaDB, DBNumber: 2, Start: 0, Amount: 20, WordLen: s7.TransportByte},
+    {Area: s7.AreaMK, DBNumber: 0, Start: 0, Amount: 8, WordLen: s7.TransportByte},
+}
+
 results, err := client.ReadMulti(ctx, items)
 if err != nil {
     log.Fatal(err)
 }
 
 for i, data := range results {
-    log.Printf("Item %d: %v", i, data)
+    fmt.Printf("Item %d: %v\n", i, data)
 }
 ```
 
-## Error Handling
+## Connection Pool
+
+For high-performance applications:
 
 ```go
-if err := client.Connect(ctx); err != nil {
-    switch {
-    case errors.Is(err, s7.ErrConnectionRefused):
-        log.Println("PLC refused connection - check IP and port")
-    case errors.Is(err, s7.ErrTimeout):
-        log.Println("Connection timeout - PLC may be unreachable")
-    case errors.Is(err, s7.ErrInvalidRackSlot):
-        log.Println("Invalid rack/slot configuration")
-    default:
-        log.Printf("Connection error: %v", err)
-    }
-}
-```
-
-## Auto-Reconnection
-
-Enable automatic reconnection for reliable communication:
-
-```go
-client := s7.NewClient(
-    "192.168.1.10",
-    s7.WithAutoReconnect(true),
-    s7.WithReconnectBackoff(1*time.Second),
-    s7.WithMaxReconnectTime(30*time.Second),
-    s7.WithMaxRetries(5),
+// Create a pool
+pool, err := s7.NewPool("192.168.1.100:102",
+    s7.WithSize(10),
+    s7.WithMaxIdleTime(5*time.Minute),
+    s7.WithClientOptions(
+        s7.WithRack(0),
+        s7.WithSlot(1),
+        s7.WithTimeout(5*time.Second),
+    ),
 )
+if err != nil {
+    log.Fatal(err)
+}
+defer pool.Close()
+
+// Get a connection from the pool
+client, err := pool.Get(ctx)
+if err != nil {
+    log.Fatal(err)
+}
+
+data, err := client.ReadDB(ctx, 1, 0, 10)
+// ...
+
+// Return the connection to the pool
+pool.Put(client)
 ```
 
-## Next Steps
+Or with the pool's direct methods:
 
-- Learn about the [Client API](client.md)
-- Configure [Options](options.md)
-- Use [Connection Pooling](pool.md) for high-throughput
-- Try the [CLI Tool](cli.md)
+```go
+// The pool automatically manages connection acquisition/release
+data, err := pool.ReadDB(ctx, 1, 0, 10)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf("Data: %v\n", data)
+
+// Writing via the pool
+err = pool.WriteDB(ctx, 1, 100, []byte{0x01, 0x02})
+if err != nil {
+    log.Fatal(err)
+}
+```

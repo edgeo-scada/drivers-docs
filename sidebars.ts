@@ -43,6 +43,11 @@ const sidebars: SidebarsConfig = {
       label: 'Metrics',
     },
     {
+      type: 'doc',
+      id: 'modbus/cli',
+      label: 'CLI Tool',
+    },
+    {
       type: 'category',
       label: 'Examples',
       items: [
@@ -96,6 +101,11 @@ const sidebars: SidebarsConfig = {
       type: 'doc',
       id: 'opcua/metrics',
       label: 'Metrics',
+    },
+    {
+      type: 'doc',
+      id: 'opcua/cli',
+      label: 'CLI Tool',
     },
     {
       type: 'category',

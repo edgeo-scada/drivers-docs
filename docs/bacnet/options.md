@@ -1,310 +1,449 @@
 # Configuration Options
 
-Complete reference for BACnet client configuration options.
+The BACnet client supports functional options for flexible configuration.
 
-## Connection Options
+## Client Options
+
+Options are passed to `NewClient()` to configure client behavior.
 
 ### WithDeviceID
 
-Sets the local device ID for this client.
-
 ```go
-bacnet.WithDeviceID(999999) // Default: 0xFFFFFFFF (broadcast)
+func WithDeviceID(id uint32) Option
 ```
 
+Sets the local device ID for the client. Used when the client needs to identify itself.
+
+```go
+client, err := bacnet.NewClient(
+    bacnet.WithDeviceID(99999),
+)
+```
+
+**Default:** `0xFFFFFFFF` (uninitialized)
+
 ### WithLocalAddress
+
+```go
+func WithLocalAddress(addr string) Option
+```
 
 Sets the local address to bind to.
 
 ```go
-bacnet.WithLocalAddress("192.168.1.100") // Auto-detected by default
+client, err := bacnet.NewClient(
+    bacnet.WithLocalAddress("192.168.1.100:47808"),
+)
 ```
+
+**Default:** System-assigned address
 
 ### WithNetworkNumber
 
-Sets the BACnet network number.
-
 ```go
-bacnet.WithNetworkNumber(1) // Default: 0
+func WithNetworkNumber(net uint16) Option
 ```
 
-## BBMD Options
+Sets the BACnet network number for the client.
+
+```go
+client, err := bacnet.NewClient(
+    bacnet.WithNetworkNumber(5),
+)
+```
+
+**Default:** `0` (local network)
 
 ### WithBBMD
 
-Configures BBMD (BACnet Broadcast Management Device) for cross-subnet communication.
-
 ```go
-bacnet.WithBBMD("192.168.1.1", 47808, 300) // Address, port, TTL in seconds
+func WithBBMD(addr string, port int, ttl time.Duration) Option
 ```
 
-When configured, the client registers as a Foreign Device with the BBMD, allowing communication across subnets.
+Configures BBMD (BACnet Broadcast Management Device) for foreign device registration. Required for cross-subnet communication.
 
-## Timeout Options
+```go
+client, err := bacnet.NewClient(
+    bacnet.WithBBMD("192.168.1.1", 47808, 60*time.Second),
+)
+```
+
+**Default:** Not configured (local network only)
 
 ### WithTimeout
 
-Sets the request timeout.
+```go
+func WithTimeout(d time.Duration) Option
+```
+
+Sets the request timeout for BACnet operations.
 
 ```go
-bacnet.WithTimeout(3*time.Second) // Default: 3s
+client, err := bacnet.NewClient(
+    bacnet.WithTimeout(5 * time.Second),
+)
 ```
+
+**Default:** `3s`
 
 ### WithRetries
 
-Sets the number of retry attempts.
+```go
+func WithRetries(n int) Option
+```
+
+Sets the number of retries for failed requests.
 
 ```go
-bacnet.WithRetries(3) // Default: 3
+client, err := bacnet.NewClient(
+    bacnet.WithRetries(5),
+)
 ```
+
+**Default:** `3`
 
 ### WithRetryDelay
 
-Sets the delay between retries.
-
 ```go
-bacnet.WithRetryDelay(500*time.Millisecond) // Default: 500ms
+func WithRetryDelay(d time.Duration) Option
 ```
 
-## APDU Options
+Sets the delay between retry attempts.
+
+```go
+client, err := bacnet.NewClient(
+    bacnet.WithRetryDelay(1 * time.Second),
+)
+```
+
+**Default:** `500ms`
 
 ### WithMaxAPDULength
 
-Sets the maximum APDU (Application Protocol Data Unit) length.
+```go
+func WithMaxAPDULength(length uint16) Option
+```
+
+Sets the maximum APDU length accepted by the client.
 
 ```go
-bacnet.WithMaxAPDULength(1476) // Default: 1476 bytes
+client, err := bacnet.NewClient(
+    bacnet.WithMaxAPDULength(1024),
+)
 ```
+
+**Default:** `1476` (maximum for BACnet/IP)
 
 ### WithSegmentation
 
-Sets the segmentation capability.
+```go
+func WithSegmentation(seg Segmentation) Option
+```
+
+Sets the segmentation capability advertised by the client.
 
 ```go
-bacnet.WithSegmentation(bacnet.SegmentationBoth) // Default: None
+client, err := bacnet.NewClient(
+    bacnet.WithSegmentation(bacnet.SegmentationBoth),
+)
 ```
 
 **Values:**
-- `SegmentationNone` - No segmentation
-- `SegmentationTransmit` - Transmit only
-- `SegmentationReceive` - Receive only
-- `SegmentationBoth` - Both directions
+- `SegmentationBoth` - Can send and receive segmented messages
+- `SegmentationTransmit` - Can only send segmented messages
+- `SegmentationReceive` - Can only receive segmented messages
+- `SegmentationNone` - No segmentation support
+
+**Default:** `SegmentationNone`
 
 ### WithProposedWindowSize
 
-Sets the segmentation window size.
-
 ```go
-bacnet.WithProposedWindowSize(4) // Default: 1
+func WithProposedWindowSize(size uint8) Option
 ```
 
-## Discovery Options
+Sets the proposed window size for segmented transfers.
+
+```go
+client, err := bacnet.NewClient(
+    bacnet.WithProposedWindowSize(4),
+)
+```
+
+**Default:** `1`
 
 ### WithAutoDiscover
+
+```go
+func WithAutoDiscover(enable bool) Option
+```
 
 Enables automatic device discovery on connect.
 
 ```go
-bacnet.WithAutoDiscover(true) // Default: false
+client, err := bacnet.NewClient(
+    bacnet.WithAutoDiscover(true),
+)
 ```
+
+**Default:** `false`
 
 ### WithDiscoverTimeout
 
-Sets the timeout for device discovery.
-
 ```go
-bacnet.WithDiscoverTimeout(5*time.Second) // Default: 5s
+func WithDiscoverTimeout(d time.Duration) Option
 ```
 
-## Logging Options
+Sets the timeout for automatic device discovery.
+
+```go
+client, err := bacnet.NewClient(
+    bacnet.WithDiscoverTimeout(10 * time.Second),
+)
+```
+
+**Default:** `5s`
 
 ### WithLogger
 
-Sets a custom logger.
+```go
+func WithLogger(logger *slog.Logger) Option
+```
+
+Sets the logger for the client.
 
 ```go
-import "log/slog"
-
 logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-bacnet.WithLogger(logger)
+client, err := bacnet.NewClient(
+    bacnet.WithLogger(logger),
+)
 ```
 
-## Complete Example
+**Default:** `slog.Default()`
+
+## Discovery Options
+
+Options for the `WhoIs()` method.
+
+### WithDeviceRange
 
 ```go
-package main
-
-import (
-    "context"
-    "log/slog"
-    "os"
-    "time"
-
-    "github.com/edgeo/drivers/bacnet/bacnet"
-)
-
-func main() {
-    logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-        Level: slog.LevelDebug,
-    }))
-
-    client := bacnet.NewClient(
-        // Connection
-        bacnet.WithDeviceID(999999),
-        bacnet.WithLocalAddress("192.168.1.100"),
-        bacnet.WithNetworkNumber(0),
-
-        // BBMD for cross-subnet
-        bacnet.WithBBMD("192.168.1.1", 47808, 300),
-
-        // Timeouts
-        bacnet.WithTimeout(3*time.Second),
-        bacnet.WithRetries(3),
-        bacnet.WithRetryDelay(500*time.Millisecond),
-
-        // APDU
-        bacnet.WithMaxAPDULength(1476),
-        bacnet.WithSegmentation(bacnet.SegmentationBoth),
-        bacnet.WithProposedWindowSize(4),
-
-        // Discovery
-        bacnet.WithAutoDiscover(true),
-        bacnet.WithDiscoverTimeout(5*time.Second),
-
-        // Logging
-        bacnet.WithLogger(logger),
-    )
-
-    ctx := context.Background()
-    if err := client.Connect(ctx); err != nil {
-        log.Fatal(err)
-    }
-    defer client.Close()
-}
+func WithDeviceRange(low, high uint32) DiscoverOption
 ```
 
-## Read/Write Options
+Limits discovery to devices within a specific instance ID range.
+
+```go
+devices, err := client.WhoIs(ctx,
+    bacnet.WithDeviceRange(1000, 2000),
+)
+```
+
+### WithDiscoveryTimeout
+
+```go
+func WithDiscoveryTimeout(d time.Duration) DiscoverOption
+```
+
+Sets the time to wait for I-Am responses.
+
+```go
+devices, err := client.WhoIs(ctx,
+    bacnet.WithDiscoveryTimeout(10 * time.Second),
+)
+```
+
+**Default:** `5s`
+
+### WithTargetNetwork
+
+```go
+func WithTargetNetwork(net uint16) DiscoverOption
+```
+
+Specifies a target network for discovery.
+
+```go
+devices, err := client.WhoIs(ctx,
+    bacnet.WithTargetNetwork(5),
+)
+```
+
+**Default:** `0` (local network)
+
+## Read Options
+
+Options for `ReadProperty()`.
 
 ### WithArrayIndex
 
-Reads a specific array element.
+```go
+func WithArrayIndex(index uint32) ReadOption
+```
+
+Specifies an array index for reading array properties.
 
 ```go
-value, err := client.ReadProperty(ctx, deviceID, object, property,
-    bacnet.WithArrayIndex(8),
+// Get array length
+length, err := client.ReadProperty(ctx, deviceID, objectID,
+    bacnet.PropertyObjectList,
+    bacnet.WithArrayIndex(0),
+)
+
+// Get specific element
+element, err := client.ReadProperty(ctx, deviceID, objectID,
+    bacnet.PropertyObjectList,
+    bacnet.WithArrayIndex(1),
+)
+```
+
+## Write Options
+
+Options for `WriteProperty()`.
+
+### WithWriteArrayIndex
+
+```go
+func WithWriteArrayIndex(index uint32) WriteOption
+```
+
+Specifies an array index for writing to array properties.
+
+```go
+err := client.WriteProperty(ctx, deviceID, objectID,
+    bacnet.PropertyWeeklySchedule,
+    scheduleData,
+    bacnet.WithWriteArrayIndex(1),
 )
 ```
 
 ### WithPriority
 
-Sets write priority (1-16).
+```go
+func WithPriority(priority uint8) WriteOption
+```
+
+Sets the priority for the write operation (1-16, where 1 is highest).
 
 ```go
-err := client.WriteProperty(ctx, deviceID, object, property, value,
-    bacnet.WithPriority(8), // Manual Operator
+err := client.WriteProperty(ctx, deviceID, objectID,
+    bacnet.PropertyPresentValue,
+    72.5,
+    bacnet.WithPriority(8), // Manual operator priority
 )
 ```
 
-### WithWriteArrayIndex
+**Priority Levels:**
 
-Writes to a specific array element.
+| Priority | Typical Use |
+|----------|-------------|
+| 1 | Manual-Life Safety |
+| 2 | Automatic-Life Safety |
+| 3 | Available |
+| 4 | Available |
+| 5 | Critical Equipment Control |
+| 6 | Minimum On/Off |
+| 7 | Available |
+| 8 | Manual Operator |
+| 9-15 | Available |
+| 16 | Default/Relinquish |
 
-```go
-err := client.WriteProperty(ctx, deviceID, object, property, value,
-    bacnet.WithWriteArrayIndex(8),
-)
-```
+## Subscribe Options
 
-## COV Options
+Options for `SubscribeCOV()`.
 
 ### WithSubscriptionLifetime
 
-Sets subscription duration in seconds.
+```go
+func WithSubscriptionLifetime(seconds uint32) SubscribeOption
+```
+
+Sets the subscription lifetime in seconds.
 
 ```go
-client.SubscribeCOV(ctx, deviceID, object, handler,
+subID, err := client.SubscribeCOV(ctx, deviceID, objectID, handler,
     bacnet.WithSubscriptionLifetime(300), // 5 minutes
 )
 ```
 
+**Default:** No lifetime (subscription remains until cancelled)
+
 ### WithCOVIncrement
 
-Sets minimum change to trigger notification (analog objects).
+```go
+func WithCOVIncrement(increment float32) SubscribeOption
+```
+
+Sets the COV increment for analog values.
 
 ```go
-client.SubscribeCOV(ctx, deviceID, object, handler,
-    bacnet.WithCOVIncrement(0.5), // Trigger on 0.5 change
+subID, err := client.SubscribeCOV(ctx, deviceID, objectID, handler,
+    bacnet.WithCOVIncrement(0.5), // Notify on 0.5 change
 )
 ```
 
 ### WithConfirmedNotifications
 
-Requests confirmed COV notifications.
+```go
+func WithConfirmedNotifications(confirmed bool) SubscribeOption
+```
+
+Requests confirmed COV notifications instead of unconfirmed.
 
 ```go
-client.SubscribeCOV(ctx, deviceID, object, handler,
+subID, err := client.SubscribeCOV(ctx, deviceID, objectID, handler,
     bacnet.WithConfirmedNotifications(true),
 )
 ```
 
-## Environment Variables
+**Default:** `false` (unconfirmed notifications)
 
-Options can be set via environment variables with the `BACNET_` prefix:
+## Complete Configuration Example
 
-| Variable | Description |
-|----------|-------------|
-| `BACNET_DEVICE_ID` | Local device ID |
-| `BACNET_LOCAL_ADDRESS` | Local bind address |
-| `BACNET_TIMEOUT` | Request timeout |
-| `BACNET_RETRIES` | Number of retries |
+```go
+logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+    Level: slog.LevelDebug,
+}))
 
-## Configuration File
+client, err := bacnet.NewClient(
+    // Device identity
+    bacnet.WithDeviceID(99999),
+    bacnet.WithLocalAddress("0.0.0.0:47808"),
 
-The CLI tool supports YAML configuration in `~/.edgeo-bacnet.yaml`:
+    // Network configuration
+    bacnet.WithNetworkNumber(1),
+    bacnet.WithBBMD("192.168.1.1", 47808, 60*time.Second),
 
-```yaml
-# Connection
-device-id: 999999
-local: 192.168.1.100
-network: 0
+    // Timeouts and retries
+    bacnet.WithTimeout(5 * time.Second),
+    bacnet.WithRetries(3),
+    bacnet.WithRetryDelay(500 * time.Millisecond),
 
-# BBMD
-bbmd: 192.168.1.1:47808
-bbmd-ttl: 300
+    // APDU configuration
+    bacnet.WithMaxAPDULength(1476),
+    bacnet.WithSegmentation(bacnet.SegmentationNone),
 
-# Timeouts
-timeout: 3s
-retries: 3
-retry-delay: 500ms
+    // Auto-discovery
+    bacnet.WithAutoDiscover(false),
+    bacnet.WithDiscoverTimeout(5 * time.Second),
 
-# APDU
-max-apdu: 1476
-segmentation: both
-window-size: 4
-
-# Discovery
-auto-discover: true
-discover-timeout: 5s
-
-# Output
-output: table
-verbose: false
+    // Logging
+    bacnet.WithLogger(logger),
+)
 ```
 
-## Options Summary
+## Default Values Summary
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `WithDeviceID` | 0xFFFFFFFF | Local device ID |
-| `WithLocalAddress` | auto | Local bind address |
-| `WithNetworkNumber` | 0 | BACnet network number |
-| `WithBBMD` | - | BBMD configuration |
-| `WithTimeout` | 3s | Request timeout |
-| `WithRetries` | 3 | Retry attempts |
-| `WithRetryDelay` | 500ms | Delay between retries |
-| `WithMaxAPDULength` | 1476 | Max APDU size |
-| `WithSegmentation` | None | Segmentation capability |
-| `WithProposedWindowSize` | 1 | Segmentation window |
-| `WithAutoDiscover` | false | Auto discovery on connect |
-| `WithDiscoverTimeout` | 5s | Discovery timeout |
-| `WithLogger` | nil | Custom logger |
+| Option | Default Value |
+|--------|---------------|
+| DeviceID | `0xFFFFFFFF` |
+| NetworkNumber | `0` |
+| Timeout | `3s` |
+| Retries | `3` |
+| RetryDelay | `500ms` |
+| MaxAPDULength | `1476` |
+| Segmentation | `SegmentationNone` |
+| ProposedWindowSize | `1` |
+| AutoDiscover | `false` |
+| DiscoverTimeout | `5s` |
+| Logger | `slog.Default()` |

@@ -1,7 +1,3 @@
----
-sidebar_position: 4
----
-
 # OPC UA Server
 
 The OPC UA server allows exposing data and services via the OPC UA protocol.
@@ -305,7 +301,7 @@ import (
     "syscall"
     "time"
 
-    "github.com/edgeo/drivers/opcua"
+    "github.com/edgeo-scada/opcua"
 )
 
 func main() {

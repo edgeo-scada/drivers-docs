@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # Example: Modbus Client
 
 A complete example of a Modbus TCP client demonstrating the main features.
@@ -19,7 +15,7 @@ import (
     "os"
     "time"
 
-    "github.com/edgeo/drivers/modbus"
+    "github.com/edgeo-scada/modbus-tcp/modbus"
 )
 
 func main() {

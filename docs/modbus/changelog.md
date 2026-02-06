@@ -1,7 +1,3 @@
----
-sidebar_position: 10
----
-
 # Changelog
 
 All notable changes to this project are documented in this file.
@@ -64,7 +60,16 @@ This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 ### Accessing the Version
 
 ```go
-import "github.com/edgeo/drivers/modbus"
+import "github.com/edgeo-scada/modbus-tcp/modbus"
+
+// Version string
+fmt.Println(modbus.Version) // "1.0.0"
+
+// Detailed version
+info := modbus.GetVersion()
+fmt.Printf("v%d.%d.%d\n", info.Major, info.Minor, info.Patch)
+```
+a/modbus-tcp/modbus"
 
 // Version string
 fmt.Println(modbus.Version) // "1.0.0"

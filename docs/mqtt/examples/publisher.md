@@ -1,8 +1,8 @@
-# Publisher Examples
+# Exemple Publisher
 
-MQTT message publishing examples.
+Exemples de publication de messages MQTT.
 
-## Basic Publisher
+## Publisher basique
 
 ```go
 package main
@@ -12,7 +12,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -27,17 +27,17 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // Simple publish
+    // Publication simple
     token := client.Publish(ctx, "test/topic", []byte("Hello!"), mqtt.QoS1, false)
     if err := token.Wait(); err != nil {
         log.Fatal(err)
     }
 
-    log.Println("Message published")
+    log.Println("Message publié")
 }
 ```
 
-## Periodic Publisher
+## Publisher périodique
 
 ```go
 package main
@@ -50,7 +50,7 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -59,10 +59,10 @@ func main() {
         mqtt.WithClientID("periodic-publisher"),
         mqtt.WithAutoReconnect(true),
         mqtt.WithOnConnect(func(c *mqtt.Client) {
-            log.Println("Connected")
+            log.Println("Connecté")
         }),
         mqtt.WithOnConnectionLost(func(c *mqtt.Client, err error) {
-            log.Printf("Disconnected: %v", err)
+            log.Printf("Déconnecté: %v", err)
         }),
     )
 
@@ -72,7 +72,7 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // Publish every second
+    // Publication toutes les secondes
     ticker := time.NewTicker(time.Second)
     defer ticker.Stop()
 
@@ -83,7 +83,7 @@ func main() {
     for {
         select {
         case <-sigCh:
-            log.Println("Shutting down...")
+            log.Println("Arrêt...")
             return
         case <-ticker.C:
             count++
@@ -91,16 +91,16 @@ func main() {
 
             token := client.Publish(ctx, "test/messages", []byte(payload), mqtt.QoS1, false)
             if err := token.Wait(); err != nil {
-                log.Printf("Error: %v", err)
+                log.Printf("Erreur: %v", err)
                 continue
             }
-            log.Printf("Published: %s", payload)
+            log.Printf("Publié: %s", payload)
         }
     }
 }
 ```
 
-## JSON Publisher
+## Publisher JSON
 
 ```go
 package main
@@ -114,7 +114,7 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 type SensorData struct {
@@ -157,14 +157,14 @@ func main() {
             payload, _ := json.Marshal(data)
             token := client.Publish(ctx, "sensors/sensor-001/data", payload, mqtt.QoS1, false)
             if err := token.Wait(); err != nil {
-                log.Printf("Error: %v", err)
+                log.Printf("Erreur: %v", err)
             }
         }
     }
 }
 ```
 
-## Publisher with MQTT 5.0 Properties
+## Publisher avec propriétés MQTT 5.0
 
 ```go
 package main
@@ -174,7 +174,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -189,8 +189,8 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // MQTT 5.0 properties
-    msgExpiry := uint32(3600) // 1 hour
+    // Propriétés MQTT 5.0
+    msgExpiry := uint32(3600) // 1 heure
     payloadFormat := byte(1) // UTF-8
 
     props := &mqtt.Properties{
@@ -211,14 +211,14 @@ func main() {
         log.Fatal(err)
     }
 
-    log.Println("Request sent, waiting for response on responses/my-request")
+    log.Println("Request envoyée, attente de la réponse sur responses/my-request")
 
-    // Wait for response...
+    // Attendre la réponse...
     time.Sleep(10 * time.Second)
 }
 ```
 
-## Publisher with Retain
+## Publisher avec retain
 
 ```go
 package main
@@ -227,7 +227,7 @@ import (
     "context"
     "log"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -242,19 +242,19 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // Retained message - new subscribers will receive it immediately
+    // Message retenu - les nouveaux abonnés le recevront immédiatement
     token := client.Publish(ctx, "status/device-001", []byte("online"), mqtt.QoS1, true)
     if err := token.Wait(); err != nil {
         log.Fatal(err)
     }
-    log.Println("Retained status published")
+    log.Println("Status retenu publié")
 
-    // To delete a retained message, publish empty payload with retain=true
+    // Pour supprimer un message retenu, publier un payload vide avec retain=true
     // client.Publish(ctx, "status/device-001", []byte{}, mqtt.QoS1, true)
 }
 ```
 
-## QoS 2 Publisher
+## Publisher QoS 2
 
 ```go
 package main
@@ -263,7 +263,7 @@ import (
     "context"
     "log"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -279,7 +279,7 @@ func main() {
     defer client.Disconnect(ctx)
 
     // QoS 2 - Exactly once delivery
-    // Used for critical transactions
+    // Utilisé pour les transactions critiques
     payload := []byte(`{"transaction_id": "tx-12345", "amount": 100.00}`)
 
     token := client.Publish(ctx, "transactions/payments", payload, mqtt.QoS2, false)
@@ -287,11 +287,11 @@ func main() {
         log.Fatal(err)
     }
 
-    log.Println("Transaction published with QoS 2 (exactly once)")
+    log.Println("Transaction publiée avec QoS 2 (exactly once)")
 }
 ```
 
-## High-Performance Publisher with Pool
+## Publisher haute performance avec pool
 
 ```go
 package main
@@ -303,7 +303,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -321,7 +321,7 @@ func main() {
     }
     defer pool.Close()
 
-    // Publish 10000 messages in parallel
+    // Publier 10000 messages en parallèle
     var wg sync.WaitGroup
     start := time.Now()
 
@@ -334,7 +334,7 @@ func main() {
             payload := []byte(fmt.Sprintf("Message %d", n))
 
             if err := pool.Publish(ctx, topic, payload, mqtt.QoS0, false); err != nil {
-                log.Printf("Error: %v", err)
+                log.Printf("Erreur: %v", err)
             }
         }(i)
     }
@@ -342,7 +342,7 @@ func main() {
     wg.Wait()
     elapsed := time.Since(start)
 
-    log.Printf("10000 messages published in %v (%.0f msg/s)",
+    log.Printf("10000 messages publiés en %v (%.0f msg/s)",
         elapsed, 10000/elapsed.Seconds())
 }
 ```

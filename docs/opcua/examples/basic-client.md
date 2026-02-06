@@ -1,12 +1,8 @@
----
-sidebar_position: 1
----
+# Exemple: Client basique
 
-# Example: Basic Client
+Cet exemple montre comment créer un client OPC UA et effectuer des opérations de base.
 
-This example shows how to create an OPC UA client and perform basic operations.
-
-## Complete Code
+## Code complet
 
 ```go
 // examples/client/main.go
@@ -18,11 +14,11 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo/drivers/opcua"
+    "github.com/edgeo-scada/opcua"
 )
 
 func main() {
-    // Create the client
+    // Créer le client
     client, err := opcua.NewClient("localhost:4840",
         opcua.WithEndpoint("opc.tcp://localhost:4840"),
         opcua.WithTimeout(10*time.Second),
@@ -30,54 +26,54 @@ func main() {
         opcua.WithAutoReconnect(true),
     )
     if err != nil {
-        log.Fatalf("Error creating client: %v", err)
+        log.Fatalf("Erreur création client: %v", err)
     }
     defer client.Close()
 
     ctx := context.Background()
 
-    // Connect and activate session
-    log.Println("Connecting to OPC UA server...")
+    // Connexion et activation de session
+    log.Println("Connexion au serveur OPC UA...")
     if err := client.ConnectAndActivateSession(ctx); err != nil {
-        log.Fatalf("Connection error: %v", err)
+        log.Fatalf("Erreur connexion: %v", err)
     }
-    log.Println("Connected!")
+    log.Println("Connecté!")
 
-    // 1. Address space navigation
+    // 1. Navigation dans l'espace d'adressage
     log.Println("\n=== Navigation (Browse) ===")
     browseExample(ctx, client)
 
-    // 2. Reading values
-    log.Println("\n=== Reading (Read) ===")
+    // 2. Lecture de valeurs
+    log.Println("\n=== Lecture (Read) ===")
     readExample(ctx, client)
 
-    // 3. Writing values
-    log.Println("\n=== Writing (Write) ===")
+    // 3. Écriture de valeurs
+    log.Println("\n=== Écriture (Write) ===")
     writeExample(ctx, client)
 
     // 4. Subscription
     log.Println("\n=== Subscription ===")
     subscribeExample(ctx, client)
 
-    // Display metrics
-    log.Println("\n=== Metrics ===")
+    // Afficher les métriques
+    log.Println("\n=== Métriques ===")
     printMetrics(client)
 
-    log.Println("\nDone!")
+    log.Println("\nTerminé!")
 }
 
 func browseExample(ctx context.Context, client *opcua.Client) {
-    // Browse from the Objects folder (i=85)
+    // Naviguer depuis le dossier Objects (i=85)
     refs, err := client.BrowseNode(ctx,
         opcua.NewNumericNodeID(0, 85),
         opcua.BrowseDirectionForward,
     )
     if err != nil {
-        log.Printf("Browse error: %v", err)
+        log.Printf("Erreur browse: %v", err)
         return
     }
 
-    fmt.Printf("Nodes found in Objects:\n")
+    fmt.Printf("Noeuds trouvés dans Objects:\n")
     for _, ref := range refs {
         fmt.Printf("  - %s (NodeID: %s, Type: %s)\n",
             ref.DisplayName.Text,
@@ -87,7 +83,7 @@ func browseExample(ctx context.Context, client *opcua.Client) {
 }
 
 func readExample(ctx context.Context, client *opcua.Client) {
-    // Read multiple attributes
+    // Lire plusieurs attributs
     nodesToRead := []opcua.ReadValueID{
         {NodeID: opcua.NewNumericNodeID(0, 2256), AttributeID: opcua.AttributeValue},      // ServerStatus
         {NodeID: opcua.NewNumericNodeID(0, 2258), AttributeID: opcua.AttributeValue},      // CurrentTime
@@ -96,15 +92,15 @@ func readExample(ctx context.Context, client *opcua.Client) {
 
     results, err := client.Read(ctx, nodesToRead)
     if err != nil {
-        log.Printf("Read error: %v", err)
+        log.Printf("Erreur lecture: %v", err)
         return
     }
 
     for i, result := range results {
         if result.StatusCode.IsBad() {
-            fmt.Printf("Read %d: Error %s\n", i, result.StatusCode)
+            fmt.Printf("Lecture %d: Erreur %s\n", i, result.StatusCode)
         } else {
-            fmt.Printf("Read %d: %v (Type: %s)\n", i,
+            fmt.Printf("Lecture %d: %v (Type: %s)\n", i,
                 result.Value.Value,
                 getTypeName(result.Value.Type))
         }
@@ -112,56 +108,56 @@ func readExample(ctx context.Context, client *opcua.Client) {
 }
 
 func writeExample(ctx context.Context, client *opcua.Client) {
-    // Note: This operation requires a server with writable nodes
-    nodeID := opcua.NewNumericNodeID(2, 1) // Example: ns=2;i=1
+    // Note: Cette opération nécessite un serveur avec des noeuds écrivables
+    nodeID := opcua.NewNumericNodeID(2, 1) // Exemple: ns=2;i=1
 
     err := client.WriteValue(ctx, nodeID, &opcua.Variant{
         Type:  opcua.TypeDouble,
         Value: 42.5,
     })
     if err != nil {
-        log.Printf("Write error (expected if node not available): %v", err)
+        log.Printf("Erreur écriture (attendue si noeud non disponible): %v", err)
         return
     }
 
-    fmt.Println("Value written successfully!")
+    fmt.Println("Valeur écrite avec succès!")
 
-    // Read back to verify
+    // Relire pour vérifier
     value, err := client.ReadValue(ctx, nodeID)
     if err != nil {
-        log.Printf("Read back error: %v", err)
+        log.Printf("Erreur relecture: %v", err)
         return
     }
-    fmt.Printf("New value: %v\n", value.Value.Value)
+    fmt.Printf("Nouvelle valeur: %v\n", value.Value.Value)
 }
 
 func subscribeExample(ctx context.Context, client *opcua.Client) {
-    // Create a subscription
+    // Créer une subscription
     sub, err := client.CreateSubscription(ctx,
         opcua.WithPublishingInterval(1000),
     )
     if err != nil {
-        log.Printf("Subscription creation error: %v", err)
+        log.Printf("Erreur création subscription: %v", err)
         return
     }
     defer sub.Delete(context.Background())
 
-    fmt.Printf("Subscription created (ID: %d, Interval: %.0fms)\n",
+    fmt.Printf("Subscription créée (ID: %d, Interval: %.0fms)\n",
         sub.ID, sub.RevisedPublishingInterval)
 
-    // Create monitored items
+    // Créer des monitored items
     items, err := sub.CreateMonitoredItems(ctx, []opcua.ReadValueID{
         {NodeID: opcua.NewNumericNodeID(0, 2258), AttributeID: opcua.AttributeValue}, // CurrentTime
     })
     if err != nil {
-        log.Printf("Monitored item creation error: %v", err)
+        log.Printf("Erreur création monitored items: %v", err)
         return
     }
 
-    fmt.Printf("Monitored items created: %d\n", len(items))
+    fmt.Printf("Monitored items créés: %d\n", len(items))
 
-    // Wait for some notifications
-    fmt.Println("Waiting for notifications (5 seconds)...")
+    // Attendre quelques notifications
+    fmt.Println("Attente des notifications (5 secondes)...")
     timeout := time.After(5 * time.Second)
     count := 0
 
@@ -171,7 +167,7 @@ func subscribeExample(ctx context.Context, client *opcua.Client) {
             count++
             fmt.Printf("  Notification %d: %v\n", count, notif.Value.Value)
         case <-timeout:
-            fmt.Printf("Notifications received: %d\n", count)
+            fmt.Printf("Notifications reçues: %d\n", count)
             return
         }
     }
@@ -179,9 +175,9 @@ func subscribeExample(ctx context.Context, client *opcua.Client) {
 
 func printMetrics(client *opcua.Client) {
     m := client.Metrics().Collect()
-    fmt.Printf("Total requests: %v\n", m["requests_total"])
-    fmt.Printf("Successful requests: %v\n", m["requests_success"])
-    fmt.Printf("Failed requests: %v\n", m["requests_errors"])
+    fmt.Printf("Requêtes totales: %v\n", m["requests_total"])
+    fmt.Printf("Requêtes réussies: %v\n", m["requests_success"])
+    fmt.Printf("Requêtes erreurs: %v\n", m["requests_errors"])
 }
 
 func formatNodeID(n opcua.NodeID) string {
@@ -219,58 +215,58 @@ func getTypeName(t opcua.TypeID) string {
 }
 ```
 
-## Running
+## Exécution
 
 ```bash
-# Build
+# Compiler
 go build -o client ./examples/client
 
-# Run (requires an OPC UA server on localhost:4840)
+# Exécuter (nécessite un serveur OPC UA sur localhost:4840)
 ./client
 ```
 
-## Expected Output
+## Sortie attendue
 
 ```
-Connecting to OPC UA server...
-Connected!
+Connexion au serveur OPC UA...
+Connecté!
 
 === Navigation (Browse) ===
-Nodes found in Objects:
+Noeuds trouvés dans Objects:
   - Server (NodeID: i=2253, Type: Object)
   - DeviceSet (NodeID: ns=2;i=1, Type: Object)
 
-=== Reading (Read) ===
-Read 0: {State: Running, ...} (Type: ExtensionObject)
-Read 1: 2024-02-01T10:30:00Z (Type: DateTime)
-Read 2: ServerStatus (Type: LocalizedText)
+=== Lecture (Read) ===
+Lecture 0: {State: Running, ...} (Type: ExtensionObject)
+Lecture 1: 2024-02-01T10:30:00Z (Type: DateTime)
+Lecture 2: ServerStatus (Type: LocalizedText)
 
-=== Writing (Write) ===
-Value written successfully!
-New value: 42.5
+=== Écriture (Write) ===
+Valeur écrite avec succès!
+Nouvelle valeur: 42.5
 
 === Subscription ===
-Subscription created (ID: 1, Interval: 1000ms)
-Monitored items created: 1
-Waiting for notifications (5 seconds)...
+Subscription créée (ID: 1, Interval: 1000ms)
+Monitored items créés: 1
+Attente des notifications (5 secondes)...
   Notification 1: 2024-02-01T10:30:01Z
   Notification 2: 2024-02-01T10:30:02Z
   Notification 3: 2024-02-01T10:30:03Z
   Notification 4: 2024-02-01T10:30:04Z
   Notification 5: 2024-02-01T10:30:05Z
-Notifications received: 5
+Notifications reçues: 5
 
-=== Metrics ===
-Total requests: 12
-Successful requests: 12
-Failed requests: 0
+=== Métriques ===
+Requêtes totales: 12
+Requêtes réussies: 12
+Requêtes erreurs: 0
 
-Done!
+Terminé!
 ```
 
-## Key Points
+## Points clés
 
-1. **Always close the client** with `defer client.Close()`
-2. **Use a context** for operations with timeout
-3. **Check StatusCodes** for read/write results
-4. **Clean up subscriptions** with `defer sub.Delete()`
+1. **Toujours fermer le client** avec `defer client.Close()`
+2. **Utiliser un context** pour les opérations avec timeout
+3. **Vérifier les StatusCode** des résultats de lecture/écriture
+4. **Nettoyer les subscriptions** avec `defer sub.Delete()`

@@ -1,12 +1,8 @@
----
-sidebar_position: 2
----
+# Exemple: Serveur basique
 
-# Example: Basic Server
+Cet exemple montre comment créer un serveur OPC UA simple avec des noeuds personnalisés.
 
-This example shows how to create a simple OPC UA server with custom nodes.
-
-## Complete Code
+## Code complet
 
 ```go
 // examples/server/main.go
@@ -22,27 +18,27 @@ import (
     "syscall"
     "time"
 
-    "github.com/edgeo/drivers/opcua"
+    "github.com/edgeo-scada/opcua"
 )
 
 func main() {
-    // Create the server
+    // Créer le serveur
     server, err := opcua.NewServer(
         opcua.WithServerEndpoint("opc.tcp://0.0.0.0:4840"),
         opcua.WithServerName("Demo OPC UA Server"),
         opcua.WithServerURI("urn:edgeo:demo:server"),
     )
     if err != nil {
-        log.Fatalf("Error creating server: %v", err)
+        log.Fatalf("Erreur création serveur: %v", err)
     }
 
-    // Configure the address space
+    // Configurer l'espace d'adressage
     setupAddressSpace(server)
 
-    // Start data simulation
+    // Démarrer la simulation de données
     go simulateData(server)
 
-    // Graceful shutdown handling
+    // Gestion de l'arrêt gracieux
     ctx, cancel := context.WithCancel(context.Background())
     defer cancel()
 
@@ -51,30 +47,30 @@ func main() {
 
     go func() {
         sig := <-sigCh
-        log.Printf("Signal received: %v, shutting down...", sig)
+        log.Printf("Signal reçu: %v, arrêt en cours...", sig)
         cancel()
     }()
 
-    // Start the server
-    log.Println("OPC UA server started on opc.tcp://0.0.0.0:4840")
-    log.Println("Press Ctrl+C to stop")
+    // Démarrer le serveur
+    log.Println("Serveur OPC UA démarré sur opc.tcp://0.0.0.0:4840")
+    log.Println("Appuyez sur Ctrl+C pour arrêter")
 
     if err := server.ListenAndServe(ctx); err != nil && err != context.Canceled {
-        log.Fatalf("Server error: %v", err)
+        log.Fatalf("Erreur serveur: %v", err)
     }
 
-    log.Println("Server stopped")
+    log.Println("Serveur arrêté")
 }
 
 func setupAddressSpace(server *opcua.Server) {
-    // Create a folder for our data
+    // Créer un dossier pour nos données
     server.AddFolder(
         opcua.NewNumericNodeID(2, 1),  // NodeID: ns=2;i=1
         "Sensors",
         opcua.NewNumericNodeID(0, 85), // Parent: Objects folder
     )
 
-    // Add sensor variables
+    // Ajouter des variables de capteurs
     server.AddNodeToFolder(
         opcua.NewNumericNodeID(2, 10),
         "Temperature",
@@ -99,20 +95,20 @@ func setupAddressSpace(server *opcua.Server) {
         opcua.NewNumericNodeID(2, 1),
     )
 
-    // Create a folder for actuators
+    // Créer un dossier pour les actionneurs
     server.AddFolder(
         opcua.NewNumericNodeID(2, 2),
         "Actuators",
         opcua.NewNumericNodeID(0, 85),
     )
 
-    // Actuator variables (read/write)
+    // Variables d'actionneurs (lecture/écriture)
     server.AddNodeWithOptions(
         opcua.NewNumericNodeID(2, 20),
         &opcua.NodeOptions{
             BrowseName:   "Valve1",
-            DisplayName:  "Valve 1",
-            Description:  "Valve 1 position (0-100%)",
+            DisplayName:  "Vanne 1",
+            Description:  "Position de la vanne 1 (0-100%)",
             DataType:     opcua.TypeDouble,
             InitialValue: 0.0,
             AccessLevel:  opcua.AccessLevelReadWrite,
@@ -124,8 +120,8 @@ func setupAddressSpace(server *opcua.Server) {
         opcua.NewNumericNodeID(2, 21),
         &opcua.NodeOptions{
             BrowseName:   "Pump1",
-            DisplayName:  "Pump 1",
-            Description:  "Pump 1 state",
+            DisplayName:  "Pompe 1",
+            Description:  "État de la pompe 1",
             DataType:     opcua.TypeBoolean,
             InitialValue: false,
             AccessLevel:  opcua.AccessLevelReadWrite,
@@ -133,7 +129,7 @@ func setupAddressSpace(server *opcua.Server) {
         },
     )
 
-    // Add status variables
+    // Ajouter des variables de statut
     server.AddFolder(
         opcua.NewNumericNodeID(2, 3),
         "Status",
@@ -156,15 +152,15 @@ func setupAddressSpace(server *opcua.Server) {
         opcua.NewNumericNodeID(2, 3),
     )
 
-    // Add a method
+    // Ajouter une méthode
     server.AddMethod(
         opcua.NewNumericNodeID(2, 100),
         opcua.NewNumericNodeID(0, 85),
         "ResetAlarms",
-        nil, // No input arguments
-        nil, // No output arguments
+        nil, // Pas d'arguments d'entrée
+        nil, // Pas d'arguments de sortie
         func(ctx context.Context, inputs []opcua.Variant) ([]opcua.Variant, error) {
-            log.Println("ResetAlarms method called")
+            log.Println("Méthode ResetAlarms appelée")
             server.SetValue(opcua.NewNumericNodeID(2, 31), int32(0))
             return nil, nil
         },
@@ -197,18 +193,18 @@ func setupAddressSpace(server *opcua.Server) {
                 result = a * b
             case "div":
                 if b == 0 {
-                    return nil, fmt.Errorf("division by zero")
+                    return nil, fmt.Errorf("division par zéro")
                 }
                 result = a / b
             default:
-                return nil, fmt.Errorf("unknown operation: %s", op)
+                return nil, fmt.Errorf("opération inconnue: %s", op)
             }
 
             return []opcua.Variant{{Type: opcua.TypeDouble, Value: result}}, nil
         },
     )
 
-    log.Println("Address space configured")
+    log.Println("Espace d'adressage configuré")
 }
 
 func simulateData(server *opcua.Server) {
@@ -220,7 +216,7 @@ func simulateData(server *opcua.Server) {
     basePressure := 1013.25
 
     for range ticker.C {
-        // Simulate temperature variations
+        // Simuler des variations de température
         temp := baseTemp + (rand.Float64()-0.5)*2
         server.SetValueWithTimestamp(
             opcua.NewNumericNodeID(2, 10),
@@ -228,7 +224,7 @@ func simulateData(server *opcua.Server) {
             time.Now(),
         )
 
-        // Simulate humidity variations
+        // Simuler des variations d'humidité
         humidity := baseHumidity + (rand.Float64()-0.5)*5
         server.SetValueWithTimestamp(
             opcua.NewNumericNodeID(2, 11),
@@ -236,7 +232,7 @@ func simulateData(server *opcua.Server) {
             time.Now(),
         )
 
-        // Simulate pressure variations
+        // Simuler des variations de pression
         pressure := basePressure + (rand.Float64()-0.5)*10
         server.SetValueWithTimestamp(
             opcua.NewNumericNodeID(2, 12),
@@ -244,7 +240,7 @@ func simulateData(server *opcua.Server) {
             time.Now(),
         )
 
-        // Occasionally simulate an alarm
+        // Simuler occasionnellement une alarme
         if rand.Float64() < 0.05 {
             currentAlarms, _ := server.GetValue(opcua.NewNumericNodeID(2, 31))
             if count, ok := currentAlarms.(int32); ok {
@@ -255,25 +251,25 @@ func simulateData(server *opcua.Server) {
 }
 ```
 
-## Running
+## Exécution
 
 ```bash
-# Build
+# Compiler
 go build -o server ./examples/server
 
-# Run
+# Exécuter
 ./server
 ```
 
-## Output
+## Sortie
 
 ```
-Address space configured
-OPC UA server started on opc.tcp://0.0.0.0:4840
-Press Ctrl+C to stop
+Espace d'adressage configuré
+Serveur OPC UA démarré sur opc.tcp://0.0.0.0:4840
+Appuyez sur Ctrl+C pour arrêter
 ```
 
-## Address Space Structure
+## Structure de l'espace d'adressage
 
 ```
 Root (i=84)
@@ -294,29 +290,29 @@ Root (i=84)
     └── Calculate (ns=2;i=101) - Method
 ```
 
-## Testing with the CLI
+## Test avec le CLI
 
 ```bash
-# Browse
+# Naviguer
 opcuacli browse -e opc.tcp://localhost:4840
 
-# Read temperature
+# Lire la température
 opcuacli read -e opc.tcp://localhost:4840 -n "ns=2;i=10"
 
-# Write to valve
+# Écrire sur la vanne
 opcuacli write -e opc.tcp://localhost:4840 -n "ns=2;i=20" -v 50.0 -T double
 
-# Subscribe to changes
+# Souscrire aux changements
 opcuacli subscribe -e opc.tcp://localhost:4840 -n "ns=2;i=10" -n "ns=2;i=11" -n "ns=2;i=12"
 
-# View server info
+# Voir les infos du serveur
 opcuacli info -e opc.tcp://localhost:4840
 ```
 
-## Key Points
+## Points clés
 
-1. **Organize nodes in folders** for better navigation
-2. **Clearly define access rights** (ReadOnly vs ReadWrite)
-3. **Update values with timestamp** for process data
-4. **Handle graceful shutdown** with system signals
-5. **Use methods** for actions that require server-side logic
+1. **Organiser les noeuds en dossiers** pour une meilleure navigation
+2. **Définir clairement les droits d'accès** (ReadOnly vs ReadWrite)
+3. **Mettre à jour les valeurs avec timestamp** pour les données de process
+4. **Gérer l'arrêt gracieux** avec les signaux système
+5. **Utiliser des méthodes** pour les actions qui nécessitent une logique côté serveur

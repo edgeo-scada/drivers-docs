@@ -1,10 +1,10 @@
-# Error Handling
+# Gestion des erreurs
 
-Documentation of MQTT 5.0 errors and reason codes.
+Documentation des erreurs et codes de raison MQTT 5.0.
 
-## Standard Errors
+## Erreurs standard
 
-The library defines standard errors for common situations:
+La bibliothèque définit des erreurs standard pour les situations courantes:
 
 ```go
 var (
@@ -20,25 +20,25 @@ var (
 )
 ```
 
-### Error Checking
+### Vérification des erreurs
 
 ```go
 token := client.Publish(ctx, topic, payload, mqtt.QoS1, false)
 if err := token.Wait(); err != nil {
     switch {
     case errors.Is(err, mqtt.ErrNotConnected):
-        log.Println("Client not connected, attempting reconnect...")
+        log.Println("Client non connecté, tentative de reconnexion...")
     case errors.Is(err, mqtt.ErrTimeout):
-        log.Println("Publish timeout")
+        log.Println("Timeout de publication")
     default:
-        log.Printf("Error: %v", err)
+        log.Printf("Erreur: %v", err)
     }
 }
 ```
 
-## MQTT 5.0 Reason Codes
+## Codes de raison MQTT 5.0
 
-MQTT 5.0 uses detailed reason codes for each operation.
+MQTT 5.0 utilise des codes de raison détaillés pour chaque opération.
 
 ### ReasonCode
 
@@ -46,77 +46,77 @@ MQTT 5.0 uses detailed reason codes for each operation.
 type ReasonCode byte
 ```
 
-### Success Codes
+### Codes de succès
 
-| Code | Constant | Description |
-|------|----------|-------------|
-| 0x00 | `ReasonSuccess` | Success / QoS 0 granted |
-| 0x01 | `ReasonGrantedQoS1` | QoS 1 granted |
-| 0x02 | `ReasonGrantedQoS2` | QoS 2 granted |
-| 0x04 | `ReasonDisconnectWithWill` | Disconnect with Will |
-| 0x10 | `ReasonNoMatchingSubscribers` | No matching subscribers |
-| 0x11 | `ReasonNoSubscriptionExisted` | No subscription existed |
-| 0x18 | `ReasonContinueAuthentication` | Continue authentication |
-| 0x19 | `ReasonReAuthenticate` | Re-authenticate |
+| Code | Constante | Description |
+|------|-----------|-------------|
+| 0x00 | `ReasonSuccess` | Succès / QoS 0 accordé |
+| 0x01 | `ReasonGrantedQoS1` | QoS 1 accordé |
+| 0x02 | `ReasonGrantedQoS2` | QoS 2 accordé |
+| 0x04 | `ReasonDisconnectWithWill` | Déconnexion avec Will |
+| 0x10 | `ReasonNoMatchingSubscribers` | Pas d'abonnés correspondants |
+| 0x11 | `ReasonNoSubscriptionExisted` | Aucun abonnement existant |
+| 0x18 | `ReasonContinueAuthentication` | Continuer l'authentification |
+| 0x19 | `ReasonReAuthenticate` | Ré-authentification |
 
-### Error Codes
+### Codes d'erreur
 
-| Code | Constant | Description |
-|------|----------|-------------|
-| 0x80 | `ReasonUnspecifiedError` | Unspecified error |
-| 0x81 | `ReasonMalformedPacket` | Malformed packet |
-| 0x82 | `ReasonProtocolError` | Protocol error |
-| 0x83 | `ReasonImplementationError` | Implementation error |
-| 0x84 | `ReasonUnsupportedProtocolVersion` | Unsupported protocol version |
-| 0x85 | `ReasonClientIDNotValid` | Invalid client ID |
-| 0x86 | `ReasonBadUsernameOrPassword` | Bad username or password |
-| 0x87 | `ReasonNotAuthorized` | Not authorized |
-| 0x88 | `ReasonServerUnavailable` | Server unavailable |
-| 0x89 | `ReasonServerBusy` | Server busy |
-| 0x8A | `ReasonBanned` | Client banned |
-| 0x8B | `ReasonServerShuttingDown` | Server shutting down |
-| 0x8C | `ReasonBadAuthenticationMethod` | Bad authentication method |
-| 0x8D | `ReasonKeepAliveTimeout` | Keep alive timeout |
-| 0x8E | `ReasonSessionTakenOver` | Session taken over by another client |
-| 0x8F | `ReasonTopicFilterInvalid` | Invalid topic filter |
-| 0x90 | `ReasonTopicNameInvalid` | Invalid topic name |
-| 0x91 | `ReasonPacketIDInUse` | Packet ID already in use |
-| 0x92 | `ReasonPacketIDNotFound` | Packet ID not found |
-| 0x93 | `ReasonReceiveMaximumExceeded` | Receive maximum exceeded |
-| 0x94 | `ReasonTopicAliasInvalid` | Invalid topic alias |
-| 0x95 | `ReasonPacketTooLarge` | Packet too large |
-| 0x96 | `ReasonMessageRateTooHigh` | Message rate too high |
-| 0x97 | `ReasonQuotaExceeded` | Quota exceeded |
-| 0x98 | `ReasonAdministrativeAction` | Administrative action |
-| 0x99 | `ReasonPayloadFormatInvalid` | Invalid payload format |
-| 0x9A | `ReasonRetainNotSupported` | Retain not supported |
-| 0x9B | `ReasonQoSNotSupported` | QoS not supported |
-| 0x9C | `ReasonUseAnotherServer` | Use another server |
-| 0x9D | `ReasonServerMoved` | Server moved |
-| 0x9E | `ReasonSharedSubsNotSupported` | Shared subscriptions not supported |
-| 0x9F | `ReasonConnectionRateExceeded` | Connection rate exceeded |
-| 0xA0 | `ReasonMaxConnectTime` | Maximum connect time |
-| 0xA1 | `ReasonSubIDNotSupported` | Subscription ID not supported |
-| 0xA2 | `ReasonWildcardSubsNotSupported` | Wildcards not supported |
+| Code | Constante | Description |
+|------|-----------|-------------|
+| 0x80 | `ReasonUnspecifiedError` | Erreur non spécifiée |
+| 0x81 | `ReasonMalformedPacket` | Paquet malformé |
+| 0x82 | `ReasonProtocolError` | Erreur de protocole |
+| 0x83 | `ReasonImplementationError` | Erreur d'implémentation |
+| 0x84 | `ReasonUnsupportedProtocolVersion` | Version protocole non supportée |
+| 0x85 | `ReasonClientIDNotValid` | Client ID invalide |
+| 0x86 | `ReasonBadUsernameOrPassword` | Mauvais username/password |
+| 0x87 | `ReasonNotAuthorized` | Non autorisé |
+| 0x88 | `ReasonServerUnavailable` | Serveur indisponible |
+| 0x89 | `ReasonServerBusy` | Serveur occupé |
+| 0x8A | `ReasonBanned` | Client banni |
+| 0x8B | `ReasonServerShuttingDown` | Serveur en arrêt |
+| 0x8C | `ReasonBadAuthenticationMethod` | Mauvaise méthode d'authentification |
+| 0x8D | `ReasonKeepAliveTimeout` | Timeout keep-alive |
+| 0x8E | `ReasonSessionTakenOver` | Session reprise par un autre client |
+| 0x8F | `ReasonTopicFilterInvalid` | Filtre de topic invalide |
+| 0x90 | `ReasonTopicNameInvalid` | Nom de topic invalide |
+| 0x91 | `ReasonPacketIDInUse` | Packet ID déjà utilisé |
+| 0x92 | `ReasonPacketIDNotFound` | Packet ID non trouvé |
+| 0x93 | `ReasonReceiveMaximumExceeded` | Receive maximum dépassé |
+| 0x94 | `ReasonTopicAliasInvalid` | Topic alias invalide |
+| 0x95 | `ReasonPacketTooLarge` | Paquet trop grand |
+| 0x96 | `ReasonMessageRateTooHigh` | Débit de messages trop élevé |
+| 0x97 | `ReasonQuotaExceeded` | Quota dépassé |
+| 0x98 | `ReasonAdministrativeAction` | Action administrative |
+| 0x99 | `ReasonPayloadFormatInvalid` | Format de payload invalide |
+| 0x9A | `ReasonRetainNotSupported` | Retain non supporté |
+| 0x9B | `ReasonQoSNotSupported` | QoS non supporté |
+| 0x9C | `ReasonUseAnotherServer` | Utiliser un autre serveur |
+| 0x9D | `ReasonServerMoved` | Serveur déplacé |
+| 0x9E | `ReasonSharedSubsNotSupported` | Shared subscriptions non supportées |
+| 0x9F | `ReasonConnectionRateExceeded` | Taux de connexion dépassé |
+| 0xA0 | `ReasonMaxConnectTime` | Temps de connexion maximum |
+| 0xA1 | `ReasonSubIDNotSupported` | Subscription ID non supporté |
+| 0xA2 | `ReasonWildcardSubsNotSupported` | Wildcards non supportés |
 
-### ReasonCode Methods
+### Méthodes ReasonCode
 
 ```go
-// Convert to string
+// Conversion en string
 code.String() string
 
-// Check if it's an error
+// Vérifie si c'est une erreur
 code.IsError() bool
 
-// Convert to Go error
+// Convertit en error Go
 code.ToError() error
 ```
 
-## Error Types
+## Types d'erreurs
 
 ### MQTTError
 
-Generic MQTT error with reason code.
+Erreur MQTT générique avec code de raison.
 
 ```go
 type MQTTError struct {
@@ -128,17 +128,17 @@ type MQTTError struct {
 func (e *MQTTError) Error() string
 ```
 
-**Example:**
+**Exemple:**
 
 ```go
 if err := token.Wait(); err != nil {
     var mqttErr *mqtt.MQTTError
     if errors.As(err, &mqttErr) {
-        log.Printf("MQTT error: code=%s, message=%s",
+        log.Printf("Erreur MQTT: code=%s, message=%s",
             mqttErr.Code.String(), mqttErr.Message)
 
         if mqttErr.Properties != nil && mqttErr.Properties.ReasonString != "" {
-            log.Printf("Reason: %s", mqttErr.Properties.ReasonString)
+            log.Printf("Raison: %s", mqttErr.Properties.ReasonString)
         }
     }
 }
@@ -146,7 +146,7 @@ if err := token.Wait(); err != nil {
 
 ### ConnectError
 
-Connection error with details.
+Erreur de connexion avec détails.
 
 ```go
 type ConnectError struct {
@@ -157,7 +157,7 @@ type ConnectError struct {
 func (e *ConnectError) Error() string
 ```
 
-**Example:**
+**Exemple:**
 
 ```go
 if err := client.Connect(ctx); err != nil {
@@ -165,20 +165,20 @@ if err := client.Connect(ctx); err != nil {
     if errors.As(err, &connErr) {
         switch connErr.Code {
         case mqtt.ReasonBadUsernameOrPassword:
-            log.Println("Invalid credentials")
+            log.Println("Identifiants incorrects")
         case mqtt.ReasonNotAuthorized:
-            log.Println("Access not authorized")
+            log.Println("Accès non autorisé")
         case mqtt.ReasonServerUnavailable:
-            log.Println("Server unavailable")
+            log.Println("Serveur indisponible")
         case mqtt.ReasonBanned:
-            log.Println("Client banned")
+            log.Println("Client banni")
         default:
-            log.Printf("Connection refused: %s", connErr.Code.String())
+            log.Printf("Connexion refusée: %s", connErr.Code.String())
         }
 
-        // Check if server suggests a redirect
+        // Vérifier si le serveur suggère une redirection
         if connErr.Properties != nil && connErr.Properties.ServerReference != "" {
-            log.Printf("Suggested redirect: %s", connErr.Properties.ServerReference)
+            log.Printf("Redirection suggérée: %s", connErr.Properties.ServerReference)
         }
     }
 }
@@ -186,7 +186,7 @@ if err := client.Connect(ctx); err != nil {
 
 ### DisconnectError
 
-Disconnection error initiated by the server.
+Erreur de déconnexion initiée par le serveur.
 
 ```go
 type DisconnectError struct {
@@ -197,7 +197,7 @@ type DisconnectError struct {
 func (e *DisconnectError) Error() string
 ```
 
-**Example:**
+**Exemple:**
 
 ```go
 client := mqtt.NewClient(
@@ -206,24 +206,24 @@ client := mqtt.NewClient(
         if errors.As(err, &discErr) {
             switch discErr.Code {
             case mqtt.ReasonSessionTakenOver:
-                log.Println("Session taken over by another client")
+                log.Println("Session reprise par un autre client")
             case mqtt.ReasonKeepAliveTimeout:
-                log.Println("Keep alive timeout")
+                log.Println("Timeout keep-alive")
             case mqtt.ReasonAdministrativeAction:
-                log.Println("Disconnected by administrator")
+                log.Println("Déconnecté par l'administrateur")
             case mqtt.ReasonServerShuttingDown:
-                log.Println("Server shutting down")
+                log.Println("Serveur en arrêt")
             default:
-                log.Printf("Disconnected: %s", discErr.Code.String())
+                log.Printf("Déconnecté: %s", discErr.Code.String())
             }
         }
     }),
 )
 ```
 
-## Error Handling by Operation
+## Gestion des erreurs par opération
 
-### Connection
+### Connexion
 
 ```go
 func connectWithRetry(client *mqtt.Client) error {
@@ -240,25 +240,25 @@ func connectWithRetry(client *mqtt.Client) error {
 
         var connErr *mqtt.ConnectError
         if errors.As(err, &connErr) {
-            // Non-recoverable errors
+            // Erreurs non récupérables
             switch connErr.Code {
             case mqtt.ReasonBanned,
                  mqtt.ReasonBadUsernameOrPassword,
                  mqtt.ReasonNotAuthorized:
-                return err // Don't retry
+                return err // Ne pas réessayer
             }
         }
 
-        log.Printf("Attempt %d failed: %v", i+1, err)
+        log.Printf("Tentative %d échouée: %v", i+1, err)
         time.Sleep(backoff)
         backoff *= 2
     }
 
-    return errors.New("connection failed after 5 attempts")
+    return errors.New("connexion impossible après 5 tentatives")
 }
 ```
 
-### Publishing
+### Publication
 
 ```go
 func publish(client *mqtt.Client, topic string, payload []byte) error {
@@ -274,11 +274,11 @@ func publish(client *mqtt.Client, topic string, payload []byte) error {
             if errors.As(err, &mqttErr) {
                 switch mqttErr.Code {
                 case mqtt.ReasonPacketTooLarge:
-                    return fmt.Errorf("message too large for broker")
+                    return fmt.Errorf("message trop grand pour le broker")
                 case mqtt.ReasonQuotaExceeded:
-                    return fmt.Errorf("quota exceeded, retry later")
+                    return fmt.Errorf("quota dépassé, réessayer plus tard")
                 case mqtt.ReasonTopicNameInvalid:
-                    return fmt.Errorf("invalid topic: %s", topic)
+                    return fmt.Errorf("topic invalide: %s", topic)
                 }
             }
             return err
@@ -290,7 +290,7 @@ func publish(client *mqtt.Client, topic string, payload []byte) error {
 }
 ```
 
-### Subscription
+### Souscription
 
 ```go
 func subscribe(client *mqtt.Client, topic string, handler mqtt.MessageHandler) error {
@@ -300,28 +300,28 @@ func subscribe(client *mqtt.Client, topic string, handler mqtt.MessageHandler) e
         if errors.As(err, &mqttErr) {
             switch mqttErr.Code {
             case mqtt.ReasonTopicFilterInvalid:
-                return fmt.Errorf("invalid topic filter: %s", topic)
+                return fmt.Errorf("filtre de topic invalide: %s", topic)
             case mqtt.ReasonSharedSubsNotSupported:
-                return fmt.Errorf("shared subscriptions not supported")
+                return fmt.Errorf("shared subscriptions non supportées")
             case mqtt.ReasonWildcardSubsNotSupported:
-                return fmt.Errorf("wildcards not supported")
+                return fmt.Errorf("wildcards non supportés")
             case mqtt.ReasonSubIDNotSupported:
-                return fmt.Errorf("subscription IDs not supported")
+                return fmt.Errorf("subscription IDs non supportés")
             }
         }
         return err
     }
 
-    // Check granted QoS
+    // Vérifier le QoS accordé
     if len(token.GrantedQoS) > 0 && token.GrantedQoS[0] < mqtt.QoS1 {
-        log.Printf("Warning: requested QoS not granted, received QoS %d", token.GrantedQoS[0])
+        log.Printf("Attention: QoS demandé non accordé, reçu QoS %d", token.GrantedQoS[0])
     }
 
     return nil
 }
 ```
 
-## Error Logging
+## Logging des erreurs
 
 ```go
 import "log/slog"

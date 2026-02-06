@@ -1,58 +1,58 @@
-# Metrics and Monitoring
+# Métriques et Monitoring
 
-Documentation of built-in metrics for monitoring the MQTT client.
+Documentation des métriques intégrées pour le monitoring du client MQTT.
 
-## Overview
+## Vue d'ensemble
 
-The library provides built-in metrics to monitor:
-- Connections and reconnections
-- Messages sent and received
-- Operation latency
-- Errors
+La bibliothèque fournit des métriques intégrées pour surveiller:
+- Connexions et reconnexions
+- Messages envoyés et reçus
+- Latence des opérations
+- Erreurs
 
-## Accessing Metrics
+## Accès aux métriques
 
-### Client Metrics
+### Métriques du client
 
 ```go
 metrics := client.Metrics()
 ```
 
-### Metrics Snapshot
+### Snapshot des métriques
 
 ```go
 snapshot := metrics.Snapshot()
 ```
 
-## Metrics Structure
+## Structure des métriques
 
 ### Metrics
 
 ```go
 type Metrics struct {
-    // Connections
-    ConnectionAttempts Counter  // Connection attempts
-    ActiveConnections  Gauge    // Active connections
-    ReconnectAttempts  Counter  // Reconnection attempts
+    // Connexions
+    ConnectionAttempts Counter  // Tentatives de connexion
+    ActiveConnections  Gauge    // Connexions actives
+    ReconnectAttempts  Counter  // Tentatives de reconnexion
 
-    // Packets
-    PacketsSent     Counter     // Packets sent
-    PacketsReceived Counter     // Packets received
+    // Paquets
+    PacketsSent     Counter     // Paquets envoyés
+    PacketsReceived Counter     // Paquets reçus
 
     // Messages
-    MessagesSent     Counter    // Published messages
-    MessagesReceived Counter    // Received messages
+    MessagesSent     Counter    // Messages publiés
+    MessagesReceived Counter    // Messages reçus
 
-    // Errors
-    Errors Counter              // Total errors
+    // Erreurs
+    Errors Counter              // Total des erreurs
 
-    // Latency
-    PublishLatency   *LatencyHistogram  // Publish latency
-    SubscribeLatency *LatencyHistogram  // Subscribe latency
-    ConnectLatency   *LatencyHistogram  // Connection latency
+    // Latence
+    PublishLatency   *LatencyHistogram  // Latence de publication
+    SubscribeLatency *LatencyHistogram  // Latence de souscription
+    ConnectLatency   *LatencyHistogram  // Latence de connexion
 
-    // Time
-    StartTime time.Time         // Start time
+    // Temps
+    StartTime time.Time         // Heure de démarrage
 }
 ```
 
@@ -75,39 +75,39 @@ type MetricsSnapshot struct {
 }
 ```
 
-## Metric Types
+## Types de métriques
 
 ### Counter
 
-Monotonically increasing counter.
+Compteur monotone croissant.
 
 ```go
 type Counter struct {
     value int64
 }
 
-func (c *Counter) Add(delta int64)  // Increment
-func (c *Counter) Value() int64     // Current value
-func (c *Counter) Reset()           // Reset
+func (c *Counter) Add(delta int64)  // Incrémenter
+func (c *Counter) Value() int64     // Valeur actuelle
+func (c *Counter) Reset()           // Réinitialiser
 ```
 
 ### Gauge
 
-Value that can increase or decrease.
+Valeur pouvant augmenter ou diminuer.
 
 ```go
 type Gauge struct {
     value int64
 }
 
-func (g *Gauge) Set(value int64)    // Set value
-func (g *Gauge) Add(delta int64)    // Add/subtract
-func (g *Gauge) Value() int64       // Current value
+func (g *Gauge) Set(value int64)    // Définir la valeur
+func (g *Gauge) Add(delta int64)    // Ajouter/soustraire
+func (g *Gauge) Value() int64       // Valeur actuelle
 ```
 
 ### LatencyHistogram
 
-Latency histogram with statistics.
+Histogramme de latence avec statistiques.
 
 ```go
 type LatencyHistogram struct {
@@ -121,21 +121,21 @@ func (h *LatencyHistogram) Stats() LatencyStats
 
 ### LatencyStats
 
-Latency statistics.
+Statistiques de latence.
 
 ```go
 type LatencyStats struct {
-    Count int64   // Number of observations
-    Sum   int64   // Sum of latencies (ms)
-    Min   int64   // Minimum latency (ms)
-    Max   int64   // Maximum latency (ms)
-    Avg   float64 // Average latency (ms)
+    Count int64   // Nombre d'observations
+    Sum   int64   // Somme des latences (ms)
+    Min   int64   // Latence minimale (ms)
+    Max   int64   // Latence maximale (ms)
+    Avg   float64 // Latence moyenne (ms)
 }
 ```
 
-## Usage Examples
+## Exemples d'utilisation
 
-### Basic Monitoring
+### Monitoring basique
 
 ```go
 func printMetrics(client *mqtt.Client) {
@@ -161,7 +161,7 @@ func printMetrics(client *mqtt.Client) {
 }
 ```
 
-### Periodic Monitoring
+### Monitoring périodique
 
 ```go
 func startMetricsReporter(client *mqtt.Client, interval time.Duration) {
@@ -173,7 +173,7 @@ func startMetricsReporter(client *mqtt.Client, interval time.Duration) {
         for range ticker.C {
             snapshot := client.Metrics().Snapshot()
 
-            // Calculate throughput
+            // Calculer le débit
             sentRate := snapshot.MessagesSent - lastSent
             recvRate := snapshot.MessagesReceived - lastRecv
             lastSent = snapshot.MessagesSent
@@ -189,7 +189,7 @@ func startMetricsReporter(client *mqtt.Client, interval time.Duration) {
 }
 ```
 
-### Prometheus Export
+### Export Prometheus
 
 ```go
 import (
@@ -281,11 +281,11 @@ func (c *MQTTCollector) Collect(ch chan<- prometheus.Metric) {
 func main() {
     client := mqtt.NewClient(/* ... */)
 
-    // Register the collector
+    // Enregistrer le collector
     collector := NewMQTTCollector(client)
     prometheus.MustRegister(collector)
 
-    // HTTP endpoint for Prometheus
+    // Endpoint HTTP pour Prometheus
     http.Handle("/metrics", promhttp.Handler())
     go http.ListenAndServe(":9090", nil)
 
@@ -293,7 +293,7 @@ func main() {
 }
 ```
 
-### JSON Export
+### Export JSON
 
 ```go
 import "encoding/json"
@@ -338,7 +338,7 @@ func startAlertChecker(client *mqtt.Client) {
         for range ticker.C {
             snapshot := client.Metrics().Snapshot()
 
-            // Alert if too many errors
+            // Alerte si trop d'erreurs
             errorRate := snapshot.Errors - lastErrors
             lastErrors = snapshot.Errors
 
@@ -346,12 +346,12 @@ func startAlertChecker(client *mqtt.Client) {
                 sendAlert(fmt.Sprintf("MQTT error rate high: %d errors/min", errorRate))
             }
 
-            // Alert if disconnected
+            // Alerte si déconnecté
             if snapshot.ActiveConnections == 0 {
                 sendAlert("MQTT client disconnected")
             }
 
-            // Alert if high latency
+            // Alerte si latence élevée
             if snapshot.PublishLatency.Avg > 1000 {
                 sendAlert(fmt.Sprintf("MQTT publish latency high: %.0fms",
                     snapshot.PublishLatency.Avg))
@@ -362,11 +362,11 @@ func startAlertChecker(client *mqtt.Client) {
 
 func sendAlert(message string) {
     log.Printf("ALERT: %s", message)
-    // Send email, Slack, PagerDuty, etc.
+    // Envoyer email, Slack, PagerDuty, etc.
 }
 ```
 
-## Pool Metrics
+## Métriques du pool
 
 ```go
 poolMetrics := pool.Metrics()
@@ -377,9 +377,9 @@ fmt.Printf("Total requests: %d\n", poolMetrics.TotalRequests.Value())
 fmt.Printf("Failed requests: %d\n", poolMetrics.FailedRequests.Value())
 ```
 
-## Reset
+## Réinitialisation
 
 ```go
-// Reset all metrics
+// Réinitialiser toutes les métriques
 client.Metrics().Reset()
 ```

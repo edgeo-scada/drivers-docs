@@ -1,7 +1,3 @@
----
-sidebar_position: 5
----
-
 # Connection Pool
 
 The connection pool allows efficient management of multiple connections to an OPC UA server for high-performance applications.
@@ -249,7 +245,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo/drivers/opcua"
+    "github.com/edgeo-scada/opcua"
 )
 
 func main() {

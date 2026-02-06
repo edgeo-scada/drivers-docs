@@ -13,7 +13,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo/drivers/s7/s7"
+    "github.com/edgeo-scada/s7/s7/s7"
 )
 
 func main() {
@@ -130,7 +130,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo/drivers/s7/s7"
+    "github.com/edgeo-scada/s7/s7/s7"
 )
 
 type SensorReading struct {

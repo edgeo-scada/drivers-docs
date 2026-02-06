@@ -1,7 +1,3 @@
----
-sidebar_position: 6
----
-
 # Configuration
 
 Configuration uses the functional options pattern.
@@ -263,7 +259,7 @@ import (
     "os"
     "time"
 
-    "github.com/edgeo/drivers/modbus"
+    "github.com/edgeo-scada/modbus-tcp/modbus"
 )
 
 func main() {

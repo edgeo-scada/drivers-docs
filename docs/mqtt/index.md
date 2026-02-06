@@ -1,33 +1,10 @@
----
-sidebar_position: 1
-slug: /mqtt/
----
-
 # MQTT Client Library
-
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
-[![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/mqtt/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fmqtt-181717?logo=github)](https://github.com/edgeo-scada/mqtt)
 
 Pure Go MQTT 5.0 client library with TLS, WebSocket, and connection pooling support.
 
-## Installation
+## Overview
 
-```bash
-go get github.com/edgeo-scada/mqtt@v1.0.0
-```
-
-To verify the installed version:
-
-```go
-import "github.com/edgeo-scada/mqtt"
-
-func main() {
-    fmt.Printf("MQTT driver version: %s\n", mqtt.Version)
-    // Output: MQTT driver version: 1.0.0
-}
-```
+This library provides a complete implementation of the MQTT 5.0 protocol for Go, designed for industrial and IoT applications requiring reliable and high-performance communication.
 
 ## Features
 
@@ -56,6 +33,12 @@ func main() {
 - Topic wildcards (`+` and `#`)
 - Will messages (Last Will and Testament)
 
+## Installation
+
+```bash
+go get github.com/edgeo-scada/mqtt
+```
+
 ## Quick Example
 
 ```go
@@ -65,7 +48,7 @@ import (
     "context"
     "log"
 
-    "github.com/edgeo-scada/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -104,7 +87,7 @@ func main() {
 | [Pool](pool.md) | Connection pooling |
 | [Errors](errors.md) | Error handling |
 | [Metrics](metrics.md) | Metrics and monitoring |
-| [CLI](cli.md) | mqttcli command-line tool |
+| [CLI](cli.md) | edgeo-mqtt command-line tool |
 | [Changelog](changelog.md) | Version history |
 
 ## Examples
@@ -131,5 +114,10 @@ mqtt/
 
 ## Compatibility
 
+- Go 1.22+
 - MQTT 5.0
 - Tested brokers: Mosquitto, HiveMQ, EMQX, VerneMQ
+
+## License
+
+MIT License

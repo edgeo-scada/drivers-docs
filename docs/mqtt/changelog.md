@@ -1,124 +1,124 @@
 # Changelog
 
-Version history of the MQTT library.
+Historique des versions de la bibliothèque MQTT.
 
 ## [1.0.0] - 2025-02-01
 
-### First Stable Release
+### Première version stable
 
-Initial release of the MQTT 5.0 client library in Go.
+Version initiale de la bibliothèque client MQTT 5.0 en Go.
 
-### Features
+### Fonctionnalités
 
-#### MQTT 5.0 Protocol
-- Full MQTT 5.0 protocol support
-- All packet types (CONNECT, PUBLISH, SUBSCRIBE, etc.)
-- MQTT 5.0 properties (User Properties, Message Expiry, etc.)
-- Detailed reason codes
+#### Protocole MQTT 5.0
+- Support complet du protocole MQTT 5.0
+- Tous les types de paquets (CONNECT, PUBLISH, SUBSCRIBE, etc.)
+- Propriétés MQTT 5.0 (User Properties, Message Expiry, etc.)
+- Codes de raison détaillés
 - Topic aliases
 
 #### Transports
-- Standard TCP (port 1883)
+- TCP standard (port 1883)
 - TLS/SSL (port 8883)
 - WebSocket (port 80)
 - WebSocket Secure (port 443)
 
-#### Quality of Service
+#### Qualité de Service
 - QoS 0 (At most once)
 - QoS 1 (At least once)
 - QoS 2 (Exactly once)
-- Complete QoS 2 flow handling
+- Gestion complète des flux QoS 2
 
-#### Connection
-- Automatic reconnection with exponential backoff
-- Keep-alive with PING/PONG
-- Clean Start / Persistent session
+#### Connexion
+- Reconnexion automatique avec backoff exponentiel
+- Keep-alive avec PING/PONG
+- Clean Start / Session persistante
 - Will Message (Last Will and Testament)
 
-#### Subscriptions
-- Wildcards (+ and #)
+#### Souscriptions
+- Wildcards (+ et #)
 - Subscription options (NoLocal, Retain handling)
-- Per-topic handlers
+- Handlers par topic
 
-#### Authentication
+#### Authentification
 - Username/Password
-- Client certificates (mTLS)
-- Configurable TLS support
+- Certificats client (mTLS)
+- Support TLS configurable
 
-#### Advanced Features
+#### Fonctionnalités avancées
 - Connection pooling
-- Built-in metrics
-- Structured logging (slog)
-- Functional options pattern
+- Métriques intégrées
+- Logging structuré (slog)
+- Pattern functional options
 
 ### API
 
 ```go
-// Client creation
+// Création du client
 client := mqtt.NewClient(opts...)
 
-// Connection
+// Connexion
 client.Connect(ctx)
 client.Disconnect(ctx)
 
-// Publishing
+// Publication
 client.Publish(ctx, topic, payload, qos, retain)
 client.PublishWithProperties(ctx, topic, payload, qos, retain, props)
 
-// Subscription
+// Souscription
 client.Subscribe(ctx, topic, qos, handler)
 client.SubscribeMultiple(ctx, subs, handler)
 client.Unsubscribe(ctx, topics...)
 
-// State
+// État
 client.IsConnected()
 client.State()
 client.Metrics()
 client.ServerProperties()
 ```
 
-### Available Options
+### Options disponibles
 
-- `WithServer(uri)` - Broker URI
-- `WithClientID(id)` - Client identifier
-- `WithCredentials(user, pass)` - Authentication
+- `WithServer(uri)` - URI du broker
+- `WithClientID(id)` - Identifiant client
+- `WithCredentials(user, pass)` - Authentification
 - `WithCleanStart(bool)` - Clean session
-- `WithKeepAlive(duration)` - Keep-alive interval
-- `WithConnectTimeout(duration)` - Connection timeout
-- `WithAutoReconnect(bool)` - Auto reconnection
-- `WithTLS(config)` - TLS configuration
-- `WithWebSocket(bool)` - WebSocket transport
+- `WithKeepAlive(duration)` - Intervalle keep-alive
+- `WithConnectTimeout(duration)` - Timeout connexion
+- `WithAutoReconnect(bool)` - Reconnexion auto
+- `WithTLS(config)` - Configuration TLS
+- `WithWebSocket(bool)` - Transport WebSocket
 - `WithWill(topic, payload, qos, retain)` - Will message
-- And more...
+- Et plus...
 
-### Dependencies
+### Dépendances
 
-- `github.com/gorilla/websocket` v1.5.3 - WebSocket support
+- `github.com/gorilla/websocket` v1.5.3 - Support WebSocket
 
 ---
 
 ## Roadmap
 
-### [1.1.0] - Planned
+### [1.1.0] - Planifié
 
 - [ ] Enhanced Authentication (AUTH packet)
 - [ ] Shared Subscriptions
-- [ ] Improved Flow Control
-- [ ] OpenTelemetry metrics
+- [ ] Flow Control amélioré
+- [ ] Métriques OpenTelemetry
 
-### [1.2.0] - Planned
+### [1.2.0] - Planifié
 
 - [ ] Message persistence
 - [ ] Offline queue
-- [ ] Message compression
+- [ ] Compression des messages
 - [ ] Rate limiting
 
 ---
 
-## Versioning Convention
+## Convention de versioning
 
-This project follows [Semantic Versioning](https://semver.org/):
+Ce projet suit [Semantic Versioning](https://semver.org/):
 
-- **MAJOR**: Incompatible API changes
-- **MINOR**: Backward-compatible new features
-- **PATCH**: Backward-compatible bug fixes
+- **MAJOR**: Changements incompatibles de l'API
+- **MINOR**: Nouvelles fonctionnalités rétrocompatibles
+- **PATCH**: Corrections de bugs rétrocompatibles

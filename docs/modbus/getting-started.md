@@ -1,7 +1,3 @@
----
-sidebar_position: 2
----
-
 # Getting Started
 
 ## Prerequisites
@@ -11,7 +7,7 @@ sidebar_position: 2
 ## Installation
 
 ```bash
-go get github.com/edgeo/drivers/modbus
+go get github.com/edgeo-scada/modbus-tcp/modbus
 ```
 
 ## Modbus Client
@@ -27,7 +23,7 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo/drivers/modbus"
+    "github.com/edgeo-scada/modbus-tcp/modbus"
 )
 
 func main() {
@@ -107,7 +103,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/edgeo/drivers/modbus"
+    "github.com/edgeo-scada/modbus-tcp/modbus"
 )
 
 func main() {

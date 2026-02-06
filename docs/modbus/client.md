@@ -1,7 +1,3 @@
----
-sidebar_position: 3
----
-
 # Modbus TCP Client
 
 The Modbus TCP client allows communication with Modbus devices (PLCs, sensors, etc.).
@@ -14,7 +10,7 @@ client, err := modbus.NewClient(addr string, opts ...Option) (*Client, error)
 
 **Parameters:**
 - `addr`: Modbus server address (e.g., `"192.168.1.100:502"`)
-- `opts`: Configuration options (see [Options](./options))
+- `opts`: Configuration options (see [Options](./options.md))
 
 **Example:**
 ```go
@@ -262,4 +258,4 @@ fmt.Printf("Successful requests: %v\n", metrics["requests_success"])
 fmt.Printf("Errors: %v\n", metrics["requests_errors"])
 ```
 
-See [Metrics](./metrics) for more details.
+See [Metrics](./metrics.md) for more details.

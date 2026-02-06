@@ -1,348 +1,224 @@
-# Client API
+# S7 TCP Client
 
-Complete documentation of the S7 client API.
+The S7 TCP client enables communication with Siemens PLCs via the S7comm protocol.
 
-## Client Creation
-
-### NewClient
-
-Creates a new S7 client instance.
+## Creation
 
 ```go
-func NewClient(address string, opts ...Option) *Client
+client, err := s7.NewClient(addr string, opts ...Option) (*Client, error)
 ```
 
 **Parameters:**
-- `address` - PLC IP address (e.g., "192.168.1.10")
-- `opts` - Functional options for configuration
+- `addr`: PLC address (e.g., `"192.168.1.100:102"`)
+- `opts`: Configuration options (see [Options](./options.md))
 
 **Example:**
-
 ```go
-client := s7.NewClient(
-    "192.168.1.10",
+client, err := s7.NewClient("192.168.1.100:102",
     s7.WithRack(0),
     s7.WithSlot(1),
     s7.WithTimeout(5*time.Second),
+    s7.WithAutoReconnect(true),
 )
 ```
 
-## Connection Methods
+## Connection and Disconnection
 
 ### Connect
-
-Establishes a connection to the PLC.
 
 ```go
 func (c *Client) Connect(ctx context.Context) error
 ```
 
-**Example:**
+Establishes the TCP connection and performs S7 negotiation:
+1. TCP connection
+2. COTP connection establishment
+3. S7 communication negotiation (PDU size)
 
 ```go
 ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 defer cancel()
 
 if err := client.Connect(ctx); err != nil {
-    log.Fatalf("Connection failed: %v", err)
+    log.Fatal(err)
 }
 ```
 
 ### Close
 
-Closes the connection to the PLC.
-
 ```go
 func (c *Client) Close() error
 ```
 
-**Example:**
+Closes the connection gracefully.
 
 ```go
-if err := client.Close(); err != nil {
-    log.Printf("Error closing connection: %v", err)
-}
+defer client.Close()
 ```
 
-### IsConnected
-
-Returns the connection state.
+### Connection State
 
 ```go
 func (c *Client) IsConnected() bool
+func (c *Client) State() ConnectionState
 ```
 
-## Generic Read/Write
+Possible states: `StateDisconnected`, `StateConnecting`, `StateConnected`
+
+### Connection Information
+
+```go
+// Negotiated PDU size
+pduSize := client.PDUSize()
+
+// Server address
+addr := client.Address()
+```
+
+## Reading Data
+
+### ReadDB
+
+Reads bytes from a Data Block.
+
+```go
+func (c *Client) ReadDB(ctx context.Context, dbNumber uint16, start uint32, size uint16) ([]byte, error)
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `dbNumber` | DB number (1-65535) |
+| `start` | Start address in bytes |
+| `size` | Number of bytes to read |
+
+```go
+data, err := client.ReadDB(ctx, 1, 0, 10)
+// Reads DB1.DBB0 to DB1.DBB9
+```
+
+### ReadInputs
+
+Reads process inputs (I).
+
+```go
+func (c *Client) ReadInputs(ctx context.Context, start uint32, size uint16) ([]byte, error)
+```
+
+```go
+inputs, err := client.ReadInputs(ctx, 0, 4)
+// Reads IB0 to IB3
+```
+
+### ReadOutputs
+
+Reads process outputs (Q).
+
+```go
+func (c *Client) ReadOutputs(ctx context.Context, start uint32, size uint16) ([]byte, error)
+```
+
+```go
+outputs, err := client.ReadOutputs(ctx, 0, 4)
+// Reads QB0 to QB3
+```
+
+### ReadMarkers
+
+Reads markers/flags (M).
+
+```go
+func (c *Client) ReadMarkers(ctx context.Context, start uint32, size uint16) ([]byte, error)
+```
+
+```go
+markers, err := client.ReadMarkers(ctx, 0, 8)
+// Reads MB0 to MB7
+```
 
 ### ReadArea
 
 Reads data from any memory area.
 
 ```go
-func (c *Client) ReadArea(ctx context.Context, area Area, dbNumber, start, length int) ([]byte, error)
+func (c *Client) ReadArea(ctx context.Context, area Area, dbNumber uint16, start uint32, amount uint16) ([]byte, error)
 ```
 
-**Parameters:**
-- `area` - Memory area (AreaDB, AreaInputs, AreaOutputs, AreaMarkers, AreaTimers, AreaCounters)
-- `dbNumber` - Data block number (only for AreaDB)
-- `start` - Start byte address
-- `length` - Number of bytes to read
-
-**Example:**
+| Parameter | Description |
+|-----------|-------------|
+| `area` | Memory area (AreaDB, AreaPE, AreaPA, AreaMK, etc.) |
+| `dbNumber` | DB number (0 for non-DB areas) |
+| `start` | Start address |
+| `amount` | Number of elements |
 
 ```go
-// Read 10 bytes from DB1 starting at byte 0
 data, err := client.ReadArea(ctx, s7.AreaDB, 1, 0, 10)
 ```
-
-### WriteArea
-
-Writes data to any memory area.
-
-```go
-func (c *Client) WriteArea(ctx context.Context, area Area, dbNumber, start int, data []byte) error
-```
-
-**Example:**
-
-```go
-// Write to DB1 at byte 0
-err := client.WriteArea(ctx, s7.AreaDB, 1, 0, []byte{0x01, 0x02, 0x03})
-```
-
-## Data Block Operations
-
-### ReadDB
-
-Reads data from a Data Block.
-
-```go
-func (c *Client) ReadDB(ctx context.Context, dbNumber, start, length int) ([]byte, error)
-```
-
-**Example:**
-
-```go
-// Read DB1.DBB0 to DB1.DBB9 (10 bytes)
-data, err := client.ReadDB(ctx, 1, 0, 10)
-```
-
-### WriteDB
-
-Writes data to a Data Block.
-
-```go
-func (c *Client) WriteDB(ctx context.Context, dbNumber, start int, data []byte) error
-```
-
-**Example:**
-
-```go
-// Write to DB1 starting at byte 0
-err := client.WriteDB(ctx, 1, 0, []byte{0x01, 0x02, 0x03, 0x04})
-```
-
-## Input/Output Operations
-
-### ReadInputs
-
-Reads process input bytes.
-
-```go
-func (c *Client) ReadInputs(ctx context.Context, start, length int) ([]byte, error)
-```
-
-**Example:**
-
-```go
-// Read IB0 to IB3
-data, err := client.ReadInputs(ctx, 0, 4)
-```
-
-### ReadOutputs
-
-Reads process output bytes.
-
-```go
-func (c *Client) ReadOutputs(ctx context.Context, start, length int) ([]byte, error)
-```
-
-### WriteOutputs
-
-Writes to process outputs.
-
-```go
-func (c *Client) WriteOutputs(ctx context.Context, start int, data []byte) error
-```
-
-**Example:**
-
-```go
-// Write to QB0
-err := client.WriteOutputs(ctx, 0, []byte{0xFF})
-```
-
-## Marker Operations
-
-### ReadMarkers
-
-Reads marker bytes.
-
-```go
-func (c *Client) ReadMarkers(ctx context.Context, start, length int) ([]byte, error)
-```
-
-### WriteMarkers
-
-Writes to marker bytes.
-
-```go
-func (c *Client) WriteMarkers(ctx context.Context, start int, data []byte) error
-```
-
-## Boolean Operations
-
-### ReadBool
-
-Reads a single bit.
-
-```go
-func (c *Client) ReadBool(ctx context.Context, area Area, dbNumber, byteAddr, bitAddr int) (bool, error)
-```
-
-**Parameters:**
-- `byteAddr` - Byte address
-- `bitAddr` - Bit position within the byte (0-7)
-
-**Example:**
-
-```go
-// Read DB1.DBX0.3 (byte 0, bit 3)
-value, err := client.ReadBool(ctx, s7.AreaDB, 1, 0, 3)
-```
-
-### WriteBool
-
-Writes a single bit.
-
-```go
-func (c *Client) WriteBool(ctx context.Context, area Area, dbNumber, byteAddr, bitAddr int, value bool) error
-```
-
-**Example:**
-
-```go
-// Set DB1.DBX0.3 to true
-err := client.WriteBool(ctx, s7.AreaDB, 1, 0, 3, true)
-```
-
-## Integer Operations
-
-### ReadInt16 / WriteInt16
-
-16-bit signed integer operations.
-
-```go
-func (c *Client) ReadInt16(ctx context.Context, area Area, dbNumber, start int) (int16, error)
-func (c *Client) WriteInt16(ctx context.Context, area Area, dbNumber, start int, value int16) error
-```
-
-### ReadUInt16 / WriteUInt16
-
-16-bit unsigned integer operations.
-
-```go
-func (c *Client) ReadUInt16(ctx context.Context, area Area, dbNumber, start int) (uint16, error)
-func (c *Client) WriteUInt16(ctx context.Context, area Area, dbNumber, start int, value uint16) error
-```
-
-### ReadInt32 / WriteInt32
-
-32-bit signed integer operations.
-
-```go
-func (c *Client) ReadInt32(ctx context.Context, area Area, dbNumber, start int) (int32, error)
-func (c *Client) WriteInt32(ctx context.Context, area Area, dbNumber, start int, value int32) error
-```
-
-### ReadUInt32 / WriteUInt32
-
-32-bit unsigned integer operations.
-
-```go
-func (c *Client) ReadUInt32(ctx context.Context, area Area, dbNumber, start int) (uint32, error)
-func (c *Client) WriteUInt32(ctx context.Context, area Area, dbNumber, start int, value uint32) error
-```
-
-## Float Operations
-
-### ReadFloat32 / WriteFloat32
-
-32-bit floating point operations.
-
-```go
-func (c *Client) ReadFloat32(ctx context.Context, area Area, dbNumber, start int) (float32, error)
-func (c *Client) WriteFloat32(ctx context.Context, area Area, dbNumber, start int, value float32) error
-```
-
-**Example:**
-
-```go
-// Read temperature from DB1.DBD100
-temp, err := client.ReadFloat32(ctx, s7.AreaDB, 1, 100)
-log.Printf("Temperature: %.2f", temp)
-
-// Write setpoint to DB1.DBD200
-err = client.WriteFloat32(ctx, s7.AreaDB, 1, 200, 25.5)
-```
-
-### ReadFloat64 / WriteFloat64
-
-64-bit floating point operations.
-
-```go
-func (c *Client) ReadFloat64(ctx context.Context, area Area, dbNumber, start int) (float64, error)
-func (c *Client) WriteFloat64(ctx context.Context, area Area, dbNumber, start int, value float64) error
-```
-
-## Multi-Item Operations
 
 ### ReadMulti
 
 Reads multiple items in a single request.
 
 ```go
-func (c *Client) ReadMulti(ctx context.Context, items []ReadItem) ([][]byte, error)
+func (c *Client) ReadMulti(ctx context.Context, items []DataItem) ([][]byte, error)
 ```
 
-**ReadItem structure:**
-
 ```go
-type ReadItem struct {
-    Area     Area
-    DBNumber int
-    Start    int
-    Length   int
-}
-```
-
-**Example:**
-
-```go
-items := []s7.ReadItem{
-    {Area: s7.AreaDB, DBNumber: 1, Start: 0, Length: 10},
-    {Area: s7.AreaDB, DBNumber: 1, Start: 100, Length: 4},
-    {Area: s7.AreaDB, DBNumber: 2, Start: 0, Length: 20},
+items := []s7.DataItem{
+    {Area: s7.AreaDB, DBNumber: 1, Start: 0, Amount: 10, WordLen: s7.TransportByte},
+    {Area: s7.AreaDB, DBNumber: 2, Start: 0, Amount: 20, WordLen: s7.TransportByte},
 }
 
 results, err := client.ReadMulti(ctx, items)
-if err != nil {
-    log.Fatal(err)
-}
+// results[0] = data from DB1
+// results[1] = data from DB2
+```
 
-for i, data := range results {
-    log.Printf("Item %d: %v", i, data)
-}
+## Writing Data
+
+### WriteDB
+
+Writes bytes to a Data Block.
+
+```go
+func (c *Client) WriteDB(ctx context.Context, dbNumber uint16, start uint32, data []byte) error
+```
+
+```go
+err := client.WriteDB(ctx, 1, 0, []byte{0x01, 0x02, 0x03})
+```
+
+### WriteOutputs
+
+Writes to process outputs (Q).
+
+```go
+func (c *Client) WriteOutputs(ctx context.Context, start uint32, data []byte) error
+```
+
+```go
+err := client.WriteOutputs(ctx, 0, []byte{0xFF})
+// QB0 = 255
+```
+
+### WriteMarkers
+
+Writes to markers/flags (M).
+
+```go
+func (c *Client) WriteMarkers(ctx context.Context, start uint32, data []byte) error
+```
+
+```go
+err := client.WriteMarkers(ctx, 0, []byte{0x55, 0xAA})
+// MB0 = 0x55, MB1 = 0xAA
+```
+
+### WriteArea
+
+Writes to any memory area.
+
+```go
+func (c *Client) WriteArea(ctx context.Context, area Area, dbNumber uint16, start uint32, data []byte) error
 ```
 
 ### WriteMulti
@@ -350,120 +226,148 @@ for i, data := range results {
 Writes multiple items in a single request.
 
 ```go
-func (c *Client) WriteMulti(ctx context.Context, items []WriteItem) error
+func (c *Client) WriteMulti(ctx context.Context, items []DataItem) error
 ```
 
-**WriteItem structure:**
+## Reading Typed Values
+
+### ReadBool
+
+Reads a bit.
 
 ```go
-type WriteItem struct {
-    Area     Area
-    DBNumber int
-    Start    int
-    Data     []byte
-}
+func (c *Client) ReadBool(ctx context.Context, area Area, dbNumber uint16, byteAddr uint32, bitAddr uint8) (bool, error)
 ```
 
-**Example:**
+```go
+val, err := client.ReadBool(ctx, s7.AreaDB, 1, 10, 0)
+// Reads DB1.DBX10.0
+```
+
+### ReadInt16 / ReadUint16
+
+Reads a 16-bit integer.
 
 ```go
-items := []s7.WriteItem{
-    {Area: s7.AreaDB, DBNumber: 1, Start: 0, Data: []byte{0x01, 0x02}},
-    {Area: s7.AreaDB, DBNumber: 1, Start: 100, Data: []byte{0x00, 0x00, 0x80, 0x3F}}, // 1.0 as float
-}
+func (c *Client) ReadInt16(ctx context.Context, area Area, dbNumber uint16, start uint32) (int16, error)
+func (c *Client) ReadUint16(ctx context.Context, area Area, dbNumber uint16, start uint32) (uint16, error)
+```
 
-err := client.WriteMulti(ctx, items)
+```go
+intVal, err := client.ReadInt16(ctx, s7.AreaDB, 1, 100)
+// Reads DB1.DBW100 as INT
+```
+
+### ReadInt32 / ReadUint32
+
+Reads a 32-bit integer.
+
+```go
+func (c *Client) ReadInt32(ctx context.Context, area Area, dbNumber uint16, start uint32) (int32, error)
+func (c *Client) ReadUint32(ctx context.Context, area Area, dbNumber uint16, start uint32) (uint32, error)
+```
+
+```go
+dintVal, err := client.ReadInt32(ctx, s7.AreaDB, 1, 102)
+// Reads DB1.DBD102 as DINT
+```
+
+### ReadFloat32
+
+Reads a 32-bit real (REAL).
+
+```go
+func (c *Client) ReadFloat32(ctx context.Context, area Area, dbNumber uint16, start uint32) (float32, error)
+```
+
+```go
+realVal, err := client.ReadFloat32(ctx, s7.AreaDB, 1, 106)
+// Reads DB1.DBD106 as REAL
+```
+
+### ReadFloat64
+
+Reads a 64-bit real (LREAL).
+
+```go
+func (c *Client) ReadFloat64(ctx context.Context, area Area, dbNumber uint16, start uint32) (float64, error)
+```
+
+```go
+lrealVal, err := client.ReadFloat64(ctx, s7.AreaDB, 1, 110)
+// Reads DB1.DBD110 as LREAL (8 bytes)
+```
+
+### ReadString
+
+Reads a string in S7 STRING format.
+
+```go
+func (c *Client) ReadString(ctx context.Context, area Area, dbNumber uint16, start uint32, maxLen uint16) (string, error)
+```
+
+The S7 STRING format: `maxLen(1) + actualLen(1) + chars(maxLen)`
+
+```go
+str, err := client.ReadString(ctx, s7.AreaDB, 1, 120, 32)
+// Reads a STRING[32] from DB1.DBB120
+```
+
+## Writing Typed Values
+
+### WriteBool
+
+Writes a bit.
+
+```go
+func (c *Client) WriteBool(ctx context.Context, area Area, dbNumber uint16, byteAddr uint32, bitAddr uint8, value bool) error
+```
+
+```go
+err := client.WriteBool(ctx, s7.AreaDB, 1, 10, 0, true)
+// Writes DB1.DBX10.0 = TRUE
+```
+
+### WriteInt16 / WriteUint16
+
+```go
+func (c *Client) WriteInt16(ctx context.Context, area Area, dbNumber uint16, start uint32, value int16) error
+func (c *Client) WriteUint16(ctx context.Context, area Area, dbNumber uint16, start uint32, value uint16) error
+```
+
+### WriteInt32 / WriteUint32
+
+```go
+func (c *Client) WriteInt32(ctx context.Context, area Area, dbNumber uint16, start uint32, value int32) error
+func (c *Client) WriteUint32(ctx context.Context, area Area, dbNumber uint16, start uint32, value uint32) error
+```
+
+### WriteFloat32
+
+```go
+func (c *Client) WriteFloat32(ctx context.Context, area Area, dbNumber uint16, start uint32, value float32) error
+```
+
+### WriteFloat64
+
+```go
+func (c *Client) WriteFloat64(ctx context.Context, area Area, dbNumber uint16, start uint32, value float64) error
+```
+
+### WriteString
+
+```go
+func (c *Client) WriteString(ctx context.Context, area Area, dbNumber uint16, start uint32, maxLen uint16, value string) error
 ```
 
 ## Metrics
 
-### Metrics
-
-Returns client metrics.
-
 ```go
-func (c *Client) Metrics() *Metrics
+metrics := client.Metrics().Snapshot()
+fmt.Printf("Total requests: %d\n", metrics.RequestsTotal)
+fmt.Printf("Successful requests: %d\n", metrics.RequestsSuccess)
+fmt.Printf("Errors: %d\n", metrics.RequestsErrors)
+fmt.Printf("Reconnections: %d\n", metrics.Reconnections)
 ```
 
-**Example:**
-
-```go
-metrics := client.Metrics()
-snapshot := metrics.Snapshot()
-
-log.Printf("Requests: %d", snapshot.RequestCount)
-log.Printf("Errors: %d", snapshot.ErrorCount)
-log.Printf("Avg latency: %v", snapshot.AvgLatency)
-```
-
-## Memory Areas
-
-```go
-const (
-    AreaDB       Area = 0x84 // Data Blocks
-    AreaInputs   Area = 0x81 // Process Inputs (I)
-    AreaOutputs  Area = 0x82 // Process Outputs (Q)
-    AreaMarkers  Area = 0x83 // Markers (M)
-    AreaTimers   Area = 0x1D // Timers (T)
-    AreaCounters Area = 0x1C // Counters (C)
-)
-```
-
-## Complete Example
-
-```go
-package main
-
-import (
-    "context"
-    "log"
-    "time"
-
-    "github.com/edgeo/drivers/s7/s7"
-)
-
-func main() {
-    // Create client with auto-reconnect
-    client := s7.NewClient(
-        "192.168.1.10",
-        s7.WithRack(0),
-        s7.WithSlot(1),
-        s7.WithTimeout(5*time.Second),
-        s7.WithAutoReconnect(true),
-    )
-
-    ctx := context.Background()
-
-    if err := client.Connect(ctx); err != nil {
-        log.Fatal(err)
-    }
-    defer client.Close()
-
-    // Read multiple values
-    items := []s7.ReadItem{
-        {Area: s7.AreaDB, DBNumber: 1, Start: 0, Length: 4},   // Temperature
-        {Area: s7.AreaDB, DBNumber: 1, Start: 4, Length: 4},   // Pressure
-        {Area: s7.AreaDB, DBNumber: 1, Start: 8, Length: 2},   // Status
-    }
-
-    results, err := client.ReadMulti(ctx, items)
-    if err != nil {
-        log.Fatal(err)
-    }
-
-    // Parse results
-    temp := s7.BytesToFloat32(results[0])
-    pressure := s7.BytesToFloat32(results[1])
-    status := s7.BytesToInt16(results[2])
-
-    log.Printf("Temperature: %.2f", temp)
-    log.Printf("Pressure: %.2f", pressure)
-    log.Printf("Status: %d", status)
-
-    // Write a setpoint
-    err = client.WriteFloat32(ctx, s7.AreaDB, 1, 100, 25.0)
-    if err != nil {
-        log.Printf("Write error: %v", err)
-    }
-}
-```
+See [Metrics](./metrics.md) for more details.

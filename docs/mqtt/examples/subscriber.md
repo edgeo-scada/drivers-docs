@@ -1,8 +1,8 @@
-# Subscriber Examples
+# Exemple Subscriber
 
-MQTT message subscription examples.
+Exemples de souscription aux messages MQTT.
 
-## Basic Subscriber
+## Subscriber basique
 
 ```go
 package main
@@ -13,12 +13,12 @@ import (
     "os"
     "os/signal"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
     handler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("Received on %s: %s", msg.Topic, string(msg.Payload))
+        log.Printf("Reçu sur %s: %s", msg.Topic, string(msg.Payload))
     }
 
     client := mqtt.NewClient(
@@ -37,18 +37,18 @@ func main() {
     if err := token.Wait(); err != nil {
         log.Fatal(err)
     }
-    log.Println("Subscribed to test/topic")
+    log.Println("Souscrit à test/topic")
 
-    // Wait for Ctrl+C
+    // Attendre Ctrl+C
     sigCh := make(chan os.Signal, 1)
     signal.Notify(sigCh, os.Interrupt)
     <-sigCh
 
-    log.Println("Shutting down...")
+    log.Println("Arrêt...")
 }
 ```
 
-## Subscriber with Wildcards
+## Subscriber avec wildcards
 
 ```go
 package main
@@ -59,7 +59,7 @@ import (
     "os"
     "os/signal"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -79,15 +79,15 @@ func main() {
     defer client.Disconnect(ctx)
 
     // Single-level wildcard: sensors/+/temperature
-    // Matches: sensors/room1/temperature, sensors/room2/temperature
-    // Does not match: sensors/building1/room1/temperature
+    // Matche: sensors/room1/temperature, sensors/room2/temperature
+    // Ne matche pas: sensors/building1/room1/temperature
     client.Subscribe(ctx, "sensors/+/temperature", mqtt.QoS1, handler)
 
     // Multi-level wildcard: sensors/#
-    // Matches: sensors/anything, sensors/room1/temp, sensors/a/b/c/d
+    // Matche: sensors/anything, sensors/room1/temp, sensors/a/b/c/d
     client.Subscribe(ctx, "alerts/#", mqtt.QoS1, handler)
 
-    log.Println("Subscribed to topics with wildcards")
+    log.Println("Souscrit aux topics avec wildcards")
 
     sigCh := make(chan os.Signal, 1)
     signal.Notify(sigCh, os.Interrupt)
@@ -95,7 +95,7 @@ func main() {
 }
 ```
 
-## Multi-Topic Subscriber
+## Subscriber multi-topics
 
 ```go
 package main
@@ -106,7 +106,7 @@ import (
     "os"
     "os/signal"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -121,13 +121,13 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // Handler for each data type
+    // Handler pour chaque type de données
     handler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("Received: topic=%s payload=%s qos=%d retain=%v",
+        log.Printf("Reçu: topic=%s payload=%s qos=%d retain=%v",
             msg.Topic, string(msg.Payload), msg.QoS, msg.Retain)
     }
 
-    // Subscribe to multiple topics in one request
+    // Souscrire à plusieurs topics en une requête
     subs := []mqtt.Subscription{
         {Topic: "sensors/temperature", QoS: mqtt.QoS1},
         {Topic: "sensors/humidity", QoS: mqtt.QoS1},
@@ -140,9 +140,9 @@ func main() {
         log.Fatal(err)
     }
 
-    // Check granted QoS
+    // Vérifier les QoS accordés
     for i, qos := range token.GrantedQoS {
-        log.Printf("Topic %s: requested QoS=%d, granted=%d",
+        log.Printf("Topic %s: QoS demandé=%d, accordé=%d",
             subs[i].Topic, subs[i].QoS, qos)
     }
 
@@ -152,7 +152,7 @@ func main() {
 }
 ```
 
-## JSON Subscriber with Decoding
+## Subscriber JSON avec décodage
 
 ```go
 package main
@@ -164,7 +164,7 @@ import (
     "os"
     "os/signal"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 type SensorData struct {
@@ -178,16 +178,16 @@ func main() {
     handler := func(c *mqtt.Client, msg *mqtt.Message) {
         var data SensorData
         if err := json.Unmarshal(msg.Payload, &data); err != nil {
-            log.Printf("JSON decode error: %v", err)
+            log.Printf("Erreur décodage JSON: %v", err)
             return
         }
 
-        log.Printf("Sensor %s: temp=%.1fC humidity=%.1f%% time=%s",
+        log.Printf("Capteur %s: temp=%.1f°C humidity=%.1f%% time=%s",
             data.DeviceID, data.Temperature, data.Humidity, data.Timestamp)
 
-        // Alerts
+        // Alertes
         if data.Temperature > 30 {
-            log.Printf("ALERT: High temperature on %s!", data.DeviceID)
+            log.Printf("ALERTE: Température élevée sur %s!", data.DeviceID)
         }
     }
 
@@ -203,7 +203,7 @@ func main() {
     defer client.Disconnect(ctx)
 
     client.Subscribe(ctx, "sensors/+/data", mqtt.QoS1, handler)
-    log.Println("Waiting for sensor data...")
+    log.Println("En attente de données capteurs...")
 
     sigCh := make(chan os.Signal, 1)
     signal.Notify(sigCh, os.Interrupt)
@@ -211,7 +211,7 @@ func main() {
 }
 ```
 
-## Subscriber with Persistent Session
+## Subscriber avec session persistante
 
 ```go
 package main
@@ -223,22 +223,22 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
     handler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("Received: %s -> %s", msg.Topic, string(msg.Payload))
+        log.Printf("Reçu: %s -> %s", msg.Topic, string(msg.Payload))
     }
 
     client := mqtt.NewClient(
         mqtt.WithServer("mqtt://localhost:1883"),
-        mqtt.WithClientID("persistent-subscriber"), // Fixed ID required
-        mqtt.WithCleanStart(false),                 // Resume session
-        mqtt.WithSessionExpiryInterval(86400),      // Session expires after 24h
+        mqtt.WithClientID("persistent-subscriber"), // ID fixe requis
+        mqtt.WithCleanStart(false),                 // Reprendre la session
+        mqtt.WithSessionExpiryInterval(86400),      // Session expire après 24h
         mqtt.WithOnConnect(func(c *mqtt.Client) {
-            log.Println("Connected")
-            // Subscriptions are preserved in the session
+            log.Println("Connecté")
+            // Les souscriptions sont conservées dans la session
         }),
     )
 
@@ -248,24 +248,24 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // Subscribe only if new session
-    // (subscriptions are preserved otherwise)
+    // Souscrire seulement si nouvelle session
+    // (les souscriptions sont conservées sinon)
     token := client.Subscribe(ctx, "important/messages", mqtt.QoS1, handler)
     token.Wait()
 
-    log.Println("Persistent session active")
-    log.Println("QoS1/2 messages will be stored during your absence")
+    log.Println("Session persistante active")
+    log.Println("Les messages QoS1/2 seront conservés pendant votre absence")
 
     sigCh := make(chan os.Signal, 1)
     signal.Notify(sigCh, os.Interrupt)
     <-sigCh
 
-    // Normal disconnect - session is preserved
-    // Messages arriving during disconnection will be received on reconnect
+    // Déconnexion normale - la session est conservée
+    // Les messages arrivant pendant la déconnexion seront reçus à la reconnexion
 }
 ```
 
-## Subscriber with Different Handlers
+## Subscriber avec handlers différenciés
 
 ```go
 package main
@@ -277,7 +277,7 @@ import (
     "os"
     "os/signal"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -292,32 +292,32 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // Temperature handler
+    // Handler pour les températures
     tempHandler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("Temperature: %s", string(msg.Payload))
+        log.Printf("🌡️  Temperature: %s", string(msg.Payload))
     }
 
-    // Humidity handler
+    // Handler pour l'humidité
     humidityHandler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("Humidity: %s", string(msg.Payload))
+        log.Printf("💧 Humidity: %s", string(msg.Payload))
     }
 
-    // Alert handler
+    // Handler pour les alertes
     alertHandler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("ALERT: %s", string(msg.Payload))
-        // Send notification, email, etc.
+        log.Printf("🚨 ALERT: %s", string(msg.Payload))
+        // Envoyer notification, email, etc.
     }
 
-    // Command handler
+    // Handler pour les commandes
     commandHandler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("Command received: %s", string(msg.Payload))
+        log.Printf("⚙️  Command received: %s", string(msg.Payload))
 
         var cmd struct {
             Action string `json:"action"`
         }
         json.Unmarshal(msg.Payload, &cmd)
 
-        // Reply if response topic specified
+        // Répondre si topic de réponse spécifié
         if msg.Properties != nil && msg.Properties.ResponseTopic != "" {
             response := []byte(`{"status":"ok"}`)
             c.PublishWithProperties(ctx, msg.Properties.ResponseTopic, response, mqtt.QoS1, false,
@@ -325,13 +325,13 @@ func main() {
         }
     }
 
-    // Subscribe with specific handlers
+    // Souscrire avec handlers spécifiques
     client.Subscribe(ctx, "sensors/+/temperature", mqtt.QoS1, tempHandler)
     client.Subscribe(ctx, "sensors/+/humidity", mqtt.QoS1, humidityHandler)
     client.Subscribe(ctx, "alerts/#", mqtt.QoS2, alertHandler)
     client.Subscribe(ctx, "commands/my-device", mqtt.QoS1, commandHandler)
 
-    log.Println("Listening on multiple topics with different handlers...")
+    log.Println("En écoute sur plusieurs topics avec handlers différenciés...")
 
     sigCh := make(chan os.Signal, 1)
     signal.Notify(sigCh, os.Interrupt)
@@ -339,7 +339,7 @@ func main() {
 }
 ```
 
-## Subscriber with Reconnection and Resubscription
+## Subscriber avec reconnexion et resouscription
 
 ```go
 package main
@@ -351,7 +351,7 @@ import (
     "os/signal"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
@@ -368,19 +368,19 @@ func main() {
         mqtt.WithConnectRetryInterval(time.Second),
         mqtt.WithMaxReconnectInterval(30*time.Second),
         mqtt.WithOnConnect(func(c *mqtt.Client) {
-            log.Println("Connected - resubscribing to topics...")
+            log.Println("Connecté - resouscription aux topics...")
 
             for _, topic := range topics {
                 token := c.Subscribe(context.Background(), topic, mqtt.QoS1, handler)
                 if err := token.Wait(); err != nil {
-                    log.Printf("Subscribe error %s: %v", topic, err)
+                    log.Printf("Erreur souscription %s: %v", topic, err)
                 } else {
-                    log.Printf("Subscribed to %s", topic)
+                    log.Printf("Souscrit à %s", topic)
                 }
             }
         }),
         mqtt.WithOnConnectionLost(func(c *mqtt.Client, err error) {
-            log.Printf("Connection lost: %v - automatic reconnection...", err)
+            log.Printf("Connexion perdue: %v - reconnexion automatique...", err)
         }),
     )
 
@@ -396,7 +396,7 @@ func main() {
 }
 ```
 
-## Subscriber with Unsubscribe
+## Subscriber avec désabonnement
 
 ```go
 package main
@@ -406,12 +406,12 @@ import (
     "log"
     "time"
 
-    "github.com/edgeo/drivers/mqtt/mqtt"
+    "github.com/edgeo-scada/mqtt/mqtt"
 )
 
 func main() {
     handler := func(c *mqtt.Client, msg *mqtt.Message) {
-        log.Printf("Received: %s", string(msg.Payload))
+        log.Printf("Reçu: %s", string(msg.Payload))
     }
 
     client := mqtt.NewClient(
@@ -425,18 +425,18 @@ func main() {
     }
     defer client.Disconnect(ctx)
 
-    // Subscribe
+    // Souscrire
     client.Subscribe(ctx, "test/topic", mqtt.QoS1, handler)
-    log.Println("Subscribed to test/topic")
+    log.Println("Souscrit à test/topic")
 
     time.Sleep(10 * time.Second)
 
-    // Unsubscribe
+    // Se désabonner
     token := client.Unsubscribe(ctx, "test/topic")
     if err := token.Wait(); err != nil {
-        log.Printf("Unsubscribe error: %v", err)
+        log.Printf("Erreur désabonnement: %v", err)
     }
-    log.Println("Unsubscribed from test/topic")
+    log.Println("Désabonné de test/topic")
 
     time.Sleep(5 * time.Second)
 }

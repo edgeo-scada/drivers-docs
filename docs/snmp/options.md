@@ -1,350 +1,376 @@
-# Configuration Options
+---
+slug: /snmp/options
+---
 
-Complete reference for SNMP client configuration options.
+# Options de configuration
 
-## Connection Options
+La librairie SNMP utilise le pattern des options fonctionnelles pour une configuration flexible et extensible.
 
-### WithTarget
+## Options du Client
 
-Sets the SNMP agent address (required).
+### Options de connexion
 
-```go
-snmp.WithTarget("192.168.1.1")
-```
+#### WithTarget
 
-### WithPort
-
-Sets the SNMP agent port.
+Définit l'adresse de l'agent SNMP cible.
 
 ```go
-snmp.WithPort(161) // Default: 161
+snmp.WithTarget("192.168.1.1:161")
+snmp.WithTarget("switch.example.com:161")
 ```
 
-### WithVersion
+**Valeur par défaut:** `"127.0.0.1:161"`
 
-Sets the SNMP version.
+#### WithTimeout
+
+Définit le timeout pour chaque requête SNMP.
 
 ```go
-snmp.WithVersion(snmp.Version2c) // Default: Version2c
+snmp.WithTimeout(5 * time.Second)
+snmp.WithTimeout(10 * time.Second)
 ```
 
-**Values:**
-- `snmp.Version1` - SNMPv1
-- `snmp.Version2c` - SNMPv2c
-- `snmp.Version3` - SNMPv3
+**Valeur par défaut:** `5 * time.Second`
 
-## SNMPv1/v2c Options
+#### WithRetries
 
-### WithCommunity
-
-Sets the community string for authentication.
+Définit le nombre de tentatives en cas d'échec.
 
 ```go
-snmp.WithCommunity("public") // Default: "public"
+snmp.WithRetries(3)
+snmp.WithRetries(5)
 ```
 
-## SNMPv3 Security Options
+**Valeur par défaut:** `3`
 
-### WithSecurityLevel
+### Options de version
 
-Sets the SNMPv3 security level.
+#### WithVersion
+
+Définit la version SNMP à utiliser.
 
 ```go
-snmp.WithSecurityLevel(snmp.AuthPriv)
+snmp.WithVersion(snmp.Version1)   // SNMPv1
+snmp.WithVersion(snmp.Version2c)  // SNMPv2c
+snmp.WithVersion(snmp.Version3)   // SNMPv3
 ```
 
-**Values:**
-- `snmp.NoAuthNoPriv` - No authentication, no encryption
-- `snmp.AuthNoPriv` - Authentication only
-- `snmp.AuthPriv` - Authentication and encryption
+**Valeur par défaut:** `snmp.Version2c`
 
-### WithSecurityName
+### Options d'authentification v1/v2c
 
-Sets the SNMPv3 username.
+#### WithCommunity
+
+Définit la community string pour SNMPv1/v2c.
+
+```go
+snmp.WithCommunity("public")     // Lecture seule
+snmp.WithCommunity("private")    // Lecture/écriture
+```
+
+**Valeur par défaut:** `"public"`
+
+### Options d'authentification v3
+
+#### WithSecurityName
+
+Définit le nom d'utilisateur USM (User-based Security Model).
 
 ```go
 snmp.WithSecurityName("admin")
+snmp.WithSecurityName("snmpuser")
 ```
 
-### WithAuth
+**Valeur par défaut:** `""`
 
-Sets authentication protocol and passphrase.
+#### WithSecurityLevel
+
+Définit le niveau de sécurité SNMPv3.
 
 ```go
-snmp.WithAuth(snmp.AuthSHA256, "myauthpassword")
+snmp.WithSecurityLevel(snmp.NoAuthNoPriv)  // Pas d'auth, pas de chiffrement
+snmp.WithSecurityLevel(snmp.AuthNoPriv)    // Auth sans chiffrement
+snmp.WithSecurityLevel(snmp.AuthPriv)      // Auth avec chiffrement
 ```
 
-**Authentication protocols:**
-- `snmp.AuthNone` - No authentication
-- `snmp.AuthMD5` - MD5 (not recommended)
-- `snmp.AuthSHA` - SHA-1
-- `snmp.AuthSHA224` - SHA-224
-- `snmp.AuthSHA256` - SHA-256 (recommended)
-- `snmp.AuthSHA384` - SHA-384
-- `snmp.AuthSHA512` - SHA-512
+**Valeur par défaut:** `snmp.NoAuthNoPriv`
 
-### WithPrivacy
+#### WithAuthProtocol
 
-Sets privacy (encryption) protocol and passphrase.
+Définit le protocole d'authentification.
 
 ```go
-snmp.WithPrivacy(snmp.PrivAES256, "myprivpassword")
+snmp.WithAuthProtocol(snmp.AuthMD5)  // MD5 (128 bits)
+snmp.WithAuthProtocol(snmp.AuthSHA)  // SHA-1 (160 bits)
 ```
 
-**Privacy protocols:**
-- `snmp.PrivNone` - No encryption
-- `snmp.PrivDES` - DES (not recommended)
-- `snmp.PrivAES` - AES-128
-- `snmp.PrivAES192` - AES-192
-- `snmp.PrivAES256` - AES-256 (recommended)
-- `snmp.PrivAES192C` - AES-192 (Cisco variant)
-- `snmp.PrivAES256C` - AES-256 (Cisco variant)
+**Valeur par défaut:** `snmp.AuthMD5`
 
-### WithContextName
+#### WithAuthPassword
 
-Sets the SNMPv3 context name.
+Définit le mot de passe d'authentification.
+
+```go
+snmp.WithAuthPassword("myauthpassword")
+```
+
+**Note:** Le mot de passe doit avoir au minimum 8 caractères.
+
+#### WithPrivProtocol
+
+Définit le protocole de chiffrement.
+
+```go
+snmp.WithPrivProtocol(snmp.PrivDES)  // DES (56 bits)
+snmp.WithPrivProtocol(snmp.PrivAES)  // AES-128
+```
+
+**Valeur par défaut:** `snmp.PrivDES`
+
+#### WithPrivPassword
+
+Définit le mot de passe de chiffrement.
+
+```go
+snmp.WithPrivPassword("myprivpassword")
+```
+
+**Note:** Le mot de passe doit avoir au minimum 8 caractères.
+
+#### WithContextName
+
+Définit le nom de contexte SNMPv3.
 
 ```go
 snmp.WithContextName("mycontext")
 ```
 
-### WithContextEngineID
+**Valeur par défaut:** `""`
 
-Sets the SNMPv3 context engine ID.
+#### WithContextEngineID
+
+Définit l'Engine ID de contexte SNMPv3.
 
 ```go
 snmp.WithContextEngineID("8000000001020304")
 ```
 
-## Timeout Options
+**Valeur par défaut:** Dérivé automatiquement
 
-### WithTimeout
+### Options de performance
 
-Sets the request timeout.
+#### WithMaxRepetitions
+
+Définit le nombre maximum de répétitions pour GET-BULK.
 
 ```go
-snmp.WithTimeout(5*time.Second) // Default: 5s
+snmp.WithMaxRepetitions(10)
+snmp.WithMaxRepetitions(50)
 ```
 
-### WithRetries
+**Valeur par défaut:** `10`
 
-Sets the number of retry attempts.
+#### WithMaxOIDsPerRequest
+
+Définit le nombre maximum d'OIDs par requête.
 
 ```go
-snmp.WithRetries(3) // Default: 3
+snmp.WithMaxOIDsPerRequest(10)
+snmp.WithMaxOIDsPerRequest(25)
 ```
 
-## Bulk Options
+**Valeur par défaut:** `10`
 
-### WithMaxOids
+## Options du Pool
 
-Sets the maximum OIDs per request.
+### WithPoolSize
+
+Définit le nombre de connexions dans le pool.
 
 ```go
-snmp.WithMaxOids(10) // Default: 10
+snmp.WithPoolSize(10)
+snmp.WithPoolSize(50)
 ```
 
-### WithMaxRepetitions
+**Valeur par défaut:** `10`
 
-Sets the max-repetitions for GetBulk.
+### WithPoolTarget
+
+Définit l'adresse cible pour toutes les connexions du pool.
 
 ```go
-snmp.WithMaxRepetitions(20) // Default: 10
+snmp.WithPoolTarget("192.168.1.1:161")
 ```
 
-### WithNonRepeaters
+### WithPoolVersion
 
-Sets the non-repeaters for GetBulk.
+Définit la version SNMP pour le pool.
 
 ```go
-snmp.WithNonRepeaters(0) // Default: 0
+snmp.WithPoolVersion(snmp.Version2c)
 ```
 
-## Reconnection Options
+### WithPoolCommunity
 
-### WithAutoReconnect
-
-Enables automatic reconnection.
+Définit la community pour le pool (v1/v2c).
 
 ```go
-snmp.WithAutoReconnect(true) // Default: true
+snmp.WithPoolCommunity("public")
 ```
 
-### WithMaxReconnectInterval
+### WithPoolHealthCheck
 
-Sets the maximum reconnection interval.
+Active la vérification périodique de la santé des connexions.
 
 ```go
-snmp.WithMaxReconnectInterval(2*time.Minute) // Default: 2 minutes
+snmp.WithPoolHealthCheck(30 * time.Second)
 ```
 
-### WithConnectRetryInterval
+**Valeur par défaut:** Désactivé
 
-Sets the initial retry interval.
+### WithPoolMaxIdleTime
+
+Définit la durée maximale d'inactivité avant fermeture.
 
 ```go
-snmp.WithConnectRetryInterval(1*time.Second) // Default: 1s
+snmp.WithPoolMaxIdleTime(5 * time.Minute)
 ```
 
-### WithMaxConnectRetries
+**Valeur par défaut:** `5 * time.Minute`
 
-Sets the maximum reconnection attempts.
+## Options du TrapListener
+
+### WithListenAddress
+
+Définit l'adresse d'écoute pour les traps.
 
 ```go
-snmp.WithMaxConnectRetries(10) // Default: unlimited
+snmp.WithListenAddress(":162")        // Port standard (nécessite root)
+snmp.WithListenAddress(":1162")       // Port alternatif
+snmp.WithListenAddress("0.0.0.0:162") // Toutes les interfaces
 ```
 
-## Callback Options
+**Valeur par défaut:** `":162"`
 
-### WithOnConnect
+### WithTrapCommunity
 
-Sets callback for successful connection.
+Filtre les traps par community string.
 
 ```go
-snmp.WithOnConnect(func() {
-    log.Println("Connected to SNMP agent")
+snmp.WithTrapCommunity("public")    // Accepte uniquement "public"
+snmp.WithTrapCommunity("")          // Accepte toutes les communities
+```
+
+**Valeur par défaut:** `""` (accepte tout)
+
+### WithTrapHandler
+
+Définit le gestionnaire de traps personnalisé.
+
+```go
+snmp.WithTrapHandler(func(trap *snmp.TrapPDU) {
+    log.Printf("Trap reçu: %v", trap)
 })
 ```
 
-### WithOnConnectionLost
+## Exemples de configuration
 
-Sets callback for lost connection.
+### Client SNMPv2c minimal
 
 ```go
-snmp.WithOnConnectionLost(func(err error) {
-    log.Printf("Connection lost: %v", err)
-})
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
+)
 ```
 
-### WithOnReconnecting
-
-Sets callback for reconnection attempts.
+### Client SNMPv2c complet
 
 ```go
-snmp.WithOnReconnecting(func(attempt int) {
-    log.Printf("Reconnecting (attempt %d)", attempt)
-})
-```
-
-## Logging Options
-
-### WithLogger
-
-Sets a custom logger.
-
-```go
-import "log/slog"
-
-logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-snmp.WithLogger(logger)
-```
-
-## Complete Examples
-
-### SNMPv2c Configuration
-
-```go
-client := snmp.NewClient(
-    snmp.WithTarget("192.168.1.1"),
-    snmp.WithPort(161),
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
     snmp.WithVersion(snmp.Version2c),
     snmp.WithCommunity("public"),
-    snmp.WithTimeout(5*time.Second),
+    snmp.WithTimeout(10*time.Second),
     snmp.WithRetries(3),
-    snmp.WithMaxOids(10),
-    snmp.WithMaxRepetitions(20),
+    snmp.WithMaxRepetitions(25),
 )
 ```
 
-### SNMPv3 AuthPriv Configuration
+### Client SNMPv3 AuthPriv
 
 ```go
-client := snmp.NewClient(
-    snmp.WithTarget("192.168.1.1"),
+client, err := snmp.NewClient(ctx,
+    snmp.WithTarget("192.168.1.1:161"),
     snmp.WithVersion(snmp.Version3),
+    snmp.WithSecurityName("admin"),
     snmp.WithSecurityLevel(snmp.AuthPriv),
-    snmp.WithSecurityName("admin"),
-    snmp.WithAuth(snmp.AuthSHA256, "authpassword123"),
-    snmp.WithPrivacy(snmp.PrivAES256, "privpassword123"),
+    snmp.WithAuthProtocol(snmp.AuthSHA),
+    snmp.WithAuthPassword("authpassword123"),
+    snmp.WithPrivProtocol(snmp.PrivAES),
+    snmp.WithPrivPassword("privpassword123"),
     snmp.WithTimeout(5*time.Second),
-    snmp.WithRetries(3),
 )
 ```
 
-### SNMPv3 AuthNoPriv Configuration
+### Pool de connexions
 
 ```go
-client := snmp.NewClient(
-    snmp.WithTarget("192.168.1.1"),
-    snmp.WithVersion(snmp.Version3),
-    snmp.WithSecurityLevel(snmp.AuthNoPriv),
-    snmp.WithSecurityName("admin"),
-    snmp.WithAuth(snmp.AuthSHA, "authpassword"),
+pool, err := snmp.NewPool(ctx,
+    snmp.WithPoolSize(20),
+    snmp.WithPoolTarget("192.168.1.1:161"),
+    snmp.WithPoolVersion(snmp.Version2c),
+    snmp.WithPoolCommunity("public"),
+    snmp.WithPoolHealthCheck(30*time.Second),
+    snmp.WithPoolMaxIdleTime(5*time.Minute),
 )
 ```
 
-## Environment Variables
+### Trap Listener
 
-Options can be set via environment variables with the `SNMP_` prefix:
-
-| Variable | Description |
-|----------|-------------|
-| `SNMP_TARGET` | Agent address |
-| `SNMP_PORT` | Agent port |
-| `SNMP_VERSION` | SNMP version (1, 2c, 3) |
-| `SNMP_COMMUNITY` | Community string |
-| `SNMP_TIMEOUT` | Request timeout |
-| `SNMP_RETRIES` | Retry attempts |
-| `SNMP_SECURITY_LEVEL` | SNMPv3 security level |
-| `SNMP_SECURITY_NAME` | SNMPv3 username |
-
-## Configuration File
-
-The CLI tool supports YAML configuration in `~/.edgeo-snmp.yaml`:
-
-```yaml
-# Connection
-target: 192.168.1.1
-port: 161
-version: "2c"
-community: public
-
-# Timeouts
-timeout: 5s
-retries: 3
-
-# Bulk
-max-oids: 10
-max-repetitions: 20
-
-# SNMPv3 (if version: "3")
-security-level: authPriv
-security-name: admin
-auth-protocol: SHA256
-auth-passphrase: authpass
-priv-protocol: AES256
-priv-passphrase: privpass
-
-# Output
-output: table
-verbose: false
+```go
+listener := snmp.NewTrapListener(handler,
+    snmp.WithListenAddress(":1162"),
+    snmp.WithTrapCommunity("traps"),
+)
 ```
 
-## Options Summary
+## Tableau récapitulatif
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `WithTarget` | - | Agent address (required) |
-| `WithPort` | 161 | Agent port |
-| `WithVersion` | Version2c | SNMP version |
-| `WithCommunity` | "public" | Community string |
-| `WithTimeout` | 5s | Request timeout |
-| `WithRetries` | 3 | Retry attempts |
-| `WithMaxOids` | 10 | Max OIDs per request |
-| `WithMaxRepetitions` | 10 | GetBulk max-repetitions |
-| `WithSecurityLevel` | NoAuthNoPriv | SNMPv3 security level |
-| `WithSecurityName` | - | SNMPv3 username |
-| `WithAuth` | - | Auth protocol and passphrase |
-| `WithPrivacy` | - | Privacy protocol and passphrase |
-| `WithAutoReconnect` | true | Enable auto-reconnect |
-| `WithLogger` | nil | Custom logger |
+### Options Client
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `WithTarget` | `string` | `"127.0.0.1:161"` | Adresse de l'agent |
+| `WithVersion` | `SNMPVersion` | `Version2c` | Version SNMP |
+| `WithCommunity` | `string` | `"public"` | Community string |
+| `WithTimeout` | `time.Duration` | `5s` | Timeout par requête |
+| `WithRetries` | `int` | `3` | Tentatives |
+| `WithSecurityName` | `string` | `""` | Utilisateur v3 |
+| `WithSecurityLevel` | `SecurityLevel` | `NoAuthNoPriv` | Niveau sécurité v3 |
+| `WithAuthProtocol` | `AuthProtocol` | `AuthMD5` | Protocole auth |
+| `WithAuthPassword` | `string` | `""` | Mot de passe auth |
+| `WithPrivProtocol` | `PrivProtocol` | `PrivDES` | Protocole chiffrement |
+| `WithPrivPassword` | `string` | `""` | Mot de passe chiffrement |
+| `WithMaxRepetitions` | `int` | `10` | Max rep. GET-BULK |
+
+### Options Pool
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `WithPoolSize` | `int` | `10` | Taille du pool |
+| `WithPoolTarget` | `string` | - | Adresse cible |
+| `WithPoolHealthCheck` | `time.Duration` | `0` | Intervalle health check |
+| `WithPoolMaxIdleTime` | `time.Duration` | `5m` | Durée max inactivité |
+
+### Options TrapListener
+
+| Option | Type | Défaut | Description |
+|--------|------|--------|-------------|
+| `WithListenAddress` | `string` | `":162"` | Adresse d'écoute |
+| `WithTrapCommunity` | `string` | `""` | Filtre community |
+
+## Voir aussi
+
+- [Client SNMP](client.md)
+- [Pool de connexions](pool.md)
+- [Listener de traps](trap-listener.md)

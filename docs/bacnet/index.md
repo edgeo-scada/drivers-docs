@@ -1,168 +1,142 @@
----
-sidebar_position: 1
-slug: /bacnet/
----
+# BACnet/IP Driver
 
-# BACnet Client Library
+A comprehensive BACnet/IP client implementation for Go, designed for building automation and control systems.
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
-[![Go](https://img.shields.io/badge/go-1.22+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/bacnet/blob/main/LICENSE)
-[![GitHub](https://img.shields.io/badge/GitHub-edgeo--scada%2Fbacnet-181717?logo=github)](https://github.com/edgeo-scada/bacnet)
+**Version:** 1.0.0
 
-Pure Go BACnet/IP client library for building automation and control systems.
+## Features
+
+- **BACnet/IP Protocol**: Full UDP-based BACnet/IP implementation with BVLC support
+- **Device Discovery**: Who-Is/I-Am broadcast mechanism with range filtering
+- **Property Operations**: ReadProperty, WriteProperty, ReadPropertyMultiple
+- **COV Subscriptions**: Change of Value notifications with confirmed/unconfirmed modes
+- **BBMD Support**: Foreign device registration for cross-subnet communication
+- **Metrics Collection**: Comprehensive metrics for monitoring and observability
+- **CLI Tool**: Full-featured command-line interface for device interaction
+- **Structured Logging**: Integration with Go's `slog` package
 
 ## Installation
 
 ```bash
-go get github.com/edgeo-scada/bacnet@v1.0.0
+go get github.com/edgeo-scada/bacnet
 ```
 
-To verify the installed version:
-
-```go
-import "github.com/edgeo-scada/bacnet"
-
-func main() {
-    fmt.Printf("BACnet driver version: %s\n", bacnet.Version)
-    // Output: BACnet driver version: 1.0.0
-}
-```
-
-## Features
-
-### BACnet/IP Protocol
-- Full BACnet/IP with BVLC (BACnet Virtual Link Control)
-- UDP transport on port 47808
-- BBMD (BACnet Broadcast Management Device) support
-- Automatic device discovery
-
-### Object Types
-- Analog Input (AI), Analog Output (AO), Analog Value (AV)
-- Binary Input (BI), Binary Output (BO), Binary Value (BV)
-- Multi-State Input (MSI), Multi-State Output (MSO)
-- Device, Calendar, Schedule, Trend Log
-- Notification Class, Program
-
-### Property Operations
-- ReadProperty / WriteProperty
-- ReadPropertyMultiple
-- COV (Change of Value) subscriptions
-- Priority array support (1-16)
-
-### Advanced Features
-- Automatic device discovery with WhoIs
-- COV subscriptions for real-time updates
-- Built-in metrics
-- Comprehensive error handling
-
-## Quick Example
+## Quick Start
 
 ```go
 package main
 
 import (
     "context"
+    "fmt"
     "log"
+    "time"
 
-    "github.com/edgeo-scada/bacnet"
+    "github.com/edgeo-scada/bacnet/bacnet"
 )
 
 func main() {
-    // Create the client
-    client := bacnet.NewClient(
-        bacnet.WithTimeout(3*time.Second),
-        bacnet.WithAutoDiscover(true),
+    // Create client
+    client, err := bacnet.NewClient(
+        bacnet.WithTimeout(3 * time.Second),
     )
+    if err != nil {
+        log.Fatal(err)
+    }
 
-    // Connect
-    if err := client.Connect(context.Background()); err != nil {
+    ctx := context.Background()
+
+    // Connect to network
+    if err := client.Connect(ctx); err != nil {
         log.Fatal(err)
     }
     defer client.Close()
 
     // Discover devices
-    devices, err := client.WhoIs(context.Background())
+    devices, err := client.WhoIs(ctx)
     if err != nil {
         log.Fatal(err)
     }
 
-    for _, device := range devices {
-        log.Printf("Found device: %d at %s", device.InstanceID, device.Address)
-    }
+    fmt.Printf("Found %d devices\n", len(devices))
 
-    // Read a present value
-    value, err := client.ReadProperty(context.Background(),
-        1234,                      // Device instance
-        bacnet.ObjectAnalogInput(0), // AI:0
-        bacnet.PropertyPresentValue,
-    )
-    if err != nil {
-        log.Fatal(err)
+    // Read a property
+    if len(devices) > 0 {
+        deviceID := devices[0].ObjectID.Instance
+        value, err := client.ReadProperty(ctx, deviceID,
+            bacnet.NewObjectIdentifier(bacnet.ObjectTypeAnalogInput, 1),
+            bacnet.PropertyPresentValue,
+        )
+        if err != nil {
+            log.Printf("Read error: %v", err)
+        } else {
+            fmt.Printf("Value: %v\n", value)
+        }
     }
-    log.Printf("Temperature: %v", value)
 }
 ```
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Getting Started](getting-started.md) | Quick start guide |
-| [Client](client.md) | BACnet client API |
-| [Options](options.md) | Configuration and options |
-| [Errors](errors.md) | Error handling |
-| [Metrics](metrics.md) | Metrics and monitoring |
-| [CLI](cli.md) | edgeo-bacnet command-line tool |
-| [Changelog](changelog.md) | Version history |
+- [Getting Started](getting-started.md) - Installation and first steps
+- [Client API](client.md) - Client operations reference
+- [Configuration Options](options.md) - All configuration options
+- [Device Discovery](discovery.md) - Who-Is/I-Am and device management
+- [COV Subscriptions](cov.md) - Change of Value notifications
+- [Error Handling](errors.md) - Error types and handling patterns
+- [Metrics](metrics.md) - Metrics collection and monitoring
+- [CLI Reference](cli.md) - Command-line tool documentation
+- [Changelog](changelog.md) - Version history
 
 ## Examples
 
-| Example | Description |
-|---------|-------------|
-| [Basic Client](examples/basic-client.md) | Device discovery and property reading |
-| [COV Subscription](examples/cov.md) | Change of Value subscriptions |
+- [Basic Client](examples/basic-client.md) - Complete client usage example
+- [Device Discovery](examples/discovery.md) - Comprehensive discovery example
 
-## Architecture
+## Protocol Support
 
-```
-bacnet/
-├── client.go      # Main BACnet client
-├── types.go       # Object types and constants
-├── protocol.go    # BVLC, NPDU, APDU encoding
-├── options.go     # Configuration options
-├── metrics.go     # Metrics
-└── errors.go      # Error handling
-```
+### Services Implemented
 
-## BACnet Object Reference
+| Service | Type | Description |
+|---------|------|-------------|
+| Who-Is | Unconfirmed | Device discovery broadcast |
+| I-Am | Unconfirmed | Device announcement |
+| ReadProperty | Confirmed | Read single property |
+| WriteProperty | Confirmed | Write single property |
+| ReadPropertyMultiple | Confirmed | Read multiple properties |
+| SubscribeCOV | Confirmed | COV subscription |
+| UnconfirmedCOVNotification | Unconfirmed | COV notification receipt |
 
 ### Object Types
 
-| Type | Abbreviation | Description |
-|------|--------------|-------------|
-| Analog Input | AI | Sensor values (temperature, pressure) |
-| Analog Output | AO | Control outputs (valve position) |
-| Analog Value | AV | Setpoints, parameters |
-| Binary Input | BI | On/off status |
-| Binary Output | BO | On/off control |
-| Binary Value | BV | Binary parameters |
-| Multi-State Input | MSI | Enumerated status |
-| Multi-State Output | MSO | Enumerated control |
-| Device | DEV | Device information |
+The driver supports all standard BACnet object types including:
 
-### Common Properties
+- Analog Input/Output/Value
+- Binary Input/Output/Value
+- Multi-State Input/Output/Value
+- Device, Schedule, Calendar
+- Trend Log, Notification Class
+- And more (60+ object types)
 
-| Property | Description |
-|----------|-------------|
-| Present-Value | Current value |
-| Object-Name | Human-readable name |
-| Description | Object description |
-| Status-Flags | In-Alarm, Fault, Overridden, Out-of-Service |
-| Units | Engineering units |
-| Priority-Array | 16-level priority array |
+### Properties
 
-## Compatibility
+Common properties with shorthand aliases:
 
-- BACnet/IP
-- Tested with Tridium, Honeywell, Johnson Controls, Siemens
+| Property | Alias | ID |
+|----------|-------|-----|
+| present-value | pv | 85 |
+| object-name | name | 77 |
+| out-of-service | oos | 81 |
+| priority-array | pa | 87 |
+| relinquish-default | rd | 104 |
+| units | - | 117 |
+| status-flags | sf | 111 |
+
+## Requirements
+
+- Go 1.21 or later
+- Network access to BACnet/IP devices (UDP port 47808)
+
+## License
+
+MIT License

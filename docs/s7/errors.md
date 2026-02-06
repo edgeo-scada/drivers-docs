@@ -1,210 +1,263 @@
 # Error Handling
 
-The S7 library provides detailed error types for proper error handling.
+## Standard Errors
 
-## Error Types
+The package defines several sentinel errors:
 
-### Connection Errors
+| Error | Description |
+|-------|-------------|
+| `ErrInvalidResponse` | Malformed or unexpected response |
+| `ErrInvalidFrame` | Malformed frame |
+| `ErrTimeout` | Timeout exceeded |
+| `ErrConnectionClosed` | Connection closed |
+| `ErrNotConnected` | Client not connected |
+| `ErrMaxRetriesExceeded` | Maximum number of retries exceeded |
+| `ErrInvalidAddress` | Invalid address |
+| `ErrInvalidLength` | Invalid length |
+| `ErrInvalidParameter` | Invalid parameter |
+| `ErrCOTPConnectionFailed` | COTP connection failed |
+| `ErrS7NegotiationFailed` | S7 negotiation failed |
+| `ErrPDUTooLarge` | PDU too large |
+| `ErrPoolExhausted` | Connection pool exhausted |
+| `ErrPoolClosed` | Connection pool closed |
+| `ErrUnsupportedPLC` | Unsupported PLC type |
+| `ErrDataTooLarge` | Data too large for a single request |
+| `ErrWriteFailed` | Write failed |
+| `ErrReadFailed` | Read failed |
 
-```go
-var (
-    // ErrConnectionRefused - PLC refused connection
-    ErrConnectionRefused = errors.New("connection refused")
-
-    // ErrConnectionClosed - Connection was closed
-    ErrConnectionClosed = errors.New("connection closed")
-
-    // ErrNotConnected - Client is not connected
-    ErrNotConnected = errors.New("not connected")
-
-    // ErrTimeout - Operation timed out
-    ErrTimeout = errors.New("timeout")
-
-    // ErrInvalidRackSlot - Invalid rack/slot configuration
-    ErrInvalidRackSlot = errors.New("invalid rack or slot")
-)
-```
-
-### Protocol Errors
-
-```go
-var (
-    // ErrInvalidPDU - Invalid PDU received
-    ErrInvalidPDU = errors.New("invalid PDU")
-
-    // ErrPDUTooLarge - PDU exceeds maximum size
-    ErrPDUTooLarge = errors.New("PDU too large")
-
-    // ErrNegotiationFailed - PDU negotiation failed
-    ErrNegotiationFailed = errors.New("negotiation failed")
-)
-```
-
-### Data Errors
+### Error Checking
 
 ```go
-var (
-    // ErrInvalidAddress - Invalid memory address
-    ErrInvalidAddress = errors.New("invalid address")
+import "errors"
 
-    // ErrInvalidArea - Invalid memory area
-    ErrInvalidArea = errors.New("invalid area")
-
-    // ErrInvalidDBNumber - Invalid data block number
-    ErrInvalidDBNumber = errors.New("invalid DB number")
-
-    // ErrDataTooLarge - Data exceeds PDU capacity
-    ErrDataTooLarge = errors.New("data too large")
-
-    // ErrAccessDenied - Access to memory area denied
-    ErrAccessDenied = errors.New("access denied")
-
-    // ErrDBNotFound - Data block does not exist
-    ErrDBNotFound = errors.New("data block not found")
-)
-```
-
-## Error Handling Patterns
-
-### Basic Error Handling
-
-```go
 data, err := client.ReadDB(ctx, 1, 0, 10)
 if err != nil {
-    log.Printf("Read error: %v", err)
-    return
+    if errors.Is(err, s7.ErrNotConnected) {
+        // Reconnect
+        client.Connect(ctx)
+    } else if errors.Is(err, s7.ErrTimeout) {
+        // Retry
+    } else if errors.Is(err, s7.ErrMaxRetriesExceeded) {
+        // Give up
+    } else if errors.Is(err, s7.ErrPoolExhausted) {
+        // Wait or increase pool size
+    }
 }
 ```
 
-### Type-Based Error Handling
+## S7 Errors (Protocol)
+
+S7 protocol errors are represented by `S7Error`:
+
+```go
+type S7Error struct {
+    ErrorClass ErrorClass
+    ErrorCode  uint8
+}
+```
+
+### Error Classes
+
+| Code | Constant | Description |
+|------|----------|-------------|
+| 0x00 | `ErrClassNoError` | No error |
+| 0x81 | `ErrClassApplication` | Application error |
+| 0x82 | `ErrClassObjectDef` | Object definition error |
+| 0x83 | `ErrClassNoResource` | Resource not available |
+| 0x84 | `ErrClassServiceError` | Service error |
+| 0x85 | `ErrClassSupplyError` | Supply error |
+| 0x87 | `ErrClassAccessError` | Access error |
+
+### S7 Error Checking
 
 ```go
 data, err := client.ReadDB(ctx, 1, 0, 10)
 if err != nil {
-    switch {
-    case errors.Is(err, s7.ErrNotConnected):
-        // Try to reconnect
-        if reconnectErr := client.Connect(ctx); reconnectErr != nil {
-            log.Fatal("Reconnect failed:", reconnectErr)
+    var s7Err *s7.S7Error
+    if errors.As(err, &s7Err) {
+        switch s7Err.ErrorClass {
+        case s7.ErrClassAccessError:
+            log.Println("Access error - check permissions")
+        case s7.ErrClassObjectDef:
+            log.Println("Object does not exist - check DB number")
+        case s7.ErrClassNoResource:
+            log.Println("Resource unavailable")
+        default:
+            log.Printf("S7 error: %v\n", s7Err)
         }
-        // Retry the operation
+    }
+}
+```
+
+### Utility Functions
+
+```go
+// Check if it is an S7 error
+if s7.IsS7Error(err) {
+    // S7 protocol error
+}
+
+// Check for a specific error class
+if s7.IsAccessError(err) {
+    // Access error
+}
+
+if s7.IsObjectError(err) {
+    // Object definition error (non-existent DB, etc.)
+}
+```
+
+## Data Item Errors
+
+Data item errors are represented by `DataError`:
+
+```go
+type DataError struct {
+    Result DataItemResult
+    Index  int
+}
+```
+
+### Result Codes
+
+| Code | Constant | Description |
+|------|----------|-------------|
+| 0x00 | `ResultReserved` | Reserved |
+| 0x01 | `ResultHardwareError` | Hardware error |
+| 0x03 | `ResultAccessingObject` | Object access not allowed |
+| 0x05 | `ResultAddressOutOfRange` | Address out of range |
+| 0x06 | `ResultDataTypeNotSupported` | Data type not supported |
+| 0x07 | `ResultDataTypeInconsistent` | Data type inconsistent |
+| 0x0A | `ResultObjectNotExist` | Object does not exist |
+| 0xFF | `ResultSuccess` | Success |
+
+### Data Error Checking
+
+```go
+data, err := client.ReadDB(ctx, 1, 1000, 10)
+if err != nil {
+    var dataErr *s7.DataError
+    if errors.As(err, &dataErr) {
+        switch dataErr.Result {
+        case s7.ResultAddressOutOfRange:
+            log.Printf("Address out of range at item %d\n", dataErr.Index)
+        case s7.ResultObjectNotExist:
+            log.Printf("Object does not exist (item %d)\n", dataErr.Index)
+        default:
+            log.Printf("Data error: %s (item %d)\n", dataErr.Result.String(), dataErr.Index)
+        }
+    }
+}
+```
+
+### Utility Functions
+
+```go
+// Check if it is a data error
+if s7.IsDataError(err) {
+    // Data item error
+}
+```
+
+## Connection Errors
+
+### Handling with Automatic Reconnection
+
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithAutoReconnect(true),
+    s7.WithMaxRetries(5),
+    s7.WithOnDisconnect(func(err error) {
+        log.Printf("Disconnected: %v\n", err)
+    }),
+)
+
+// Network errors are automatically handled with retry
+data, err := client.ReadDB(ctx, 1, 0, 10)
+if err != nil {
+    // After 5 failed attempts
+    if errors.Is(err, s7.ErrMaxRetriesExceeded) {
+        log.Fatal("Unable to reach the PLC")
+    }
+}
+```
+
+### Manual Handling
+
+```go
+client, _ := s7.NewClient("192.168.1.100:102",
+    s7.WithAutoReconnect(false),
+)
+
+data, err := client.ReadDB(ctx, 1, 0, 10)
+if err != nil {
+    if errors.Is(err, s7.ErrNotConnected) {
+        // Manual reconnection
+        if err := client.Connect(ctx); err != nil {
+            log.Fatal(err)
+        }
+        // Retry
         data, err = client.ReadDB(ctx, 1, 0, 10)
-
-    case errors.Is(err, s7.ErrTimeout):
-        log.Println("Operation timed out - PLC may be busy")
-
-    case errors.Is(err, s7.ErrDBNotFound):
-        log.Printf("DB1 does not exist on this PLC")
-
-    case errors.Is(err, s7.ErrAccessDenied):
-        log.Printf("Access to DB1 is denied - check PLC security settings")
-
-    default:
-        log.Printf("Unexpected error: %v", err)
     }
 }
 ```
 
-### Connection Error Handling
+## Negotiation Errors
+
+During connection, specific errors may occur:
 
 ```go
-if err := client.Connect(ctx); err != nil {
-    switch {
-    case errors.Is(err, s7.ErrConnectionRefused):
-        log.Println("PLC refused connection")
-        log.Println("- Verify IP address is correct")
-        log.Println("- Check PLC is powered on and reachable")
-        log.Println("- Ensure port 102 is not blocked")
-
-    case errors.Is(err, s7.ErrTimeout):
-        log.Println("Connection timed out")
-        log.Println("- PLC may be unreachable")
-        log.Println("- Check network connectivity")
-
-    case errors.Is(err, s7.ErrInvalidRackSlot):
-        log.Println("Invalid rack/slot configuration")
-        log.Println("- S7-1200/1500: rack=0, slot=1")
-        log.Println("- S7-300/400: rack=0, slot=2")
-
-    case errors.Is(err, s7.ErrNegotiationFailed):
-        log.Println("PDU negotiation failed")
-        log.Println("- Try reducing PDU size")
-
-    default:
-        log.Printf("Connection error: %v", err)
-    }
-}
-```
-
-## S7 Error Codes
-
-The PLC returns specific error codes that are mapped to errors:
-
-| Code | Error | Description |
-|------|-------|-------------|
-| 0x00 | - | No error |
-| 0x01 | `ErrHardwareFault` | Hardware fault |
-| 0x03 | `ErrAccessingObject` | Object access error |
-| 0x05 | `ErrInvalidAddress` | Invalid address |
-| 0x06 | `ErrDataTypeNotSupported` | Data type not supported |
-| 0x07 | `ErrDataTypeInconsistent` | Data type inconsistent |
-| 0x0A | `ErrDBNotFound` | Object does not exist |
-
-## Retry with Backoff
-
-```go
-func readWithRetry(ctx context.Context, client *s7.Client, dbNum, start, length int) ([]byte, error) {
-    var lastErr error
-    backoff := 100 * time.Millisecond
-
-    for attempt := 0; attempt < 5; attempt++ {
-        data, err := client.ReadDB(ctx, dbNum, start, length)
-        if err == nil {
-            return data, nil
-        }
-
-        lastErr = err
-
-        // Don't retry on permanent errors
-        if errors.Is(err, s7.ErrDBNotFound) ||
-           errors.Is(err, s7.ErrAccessDenied) ||
-           errors.Is(err, s7.ErrInvalidAddress) {
-            return nil, err
-        }
-
-        log.Printf("Attempt %d failed: %v, retrying in %v", attempt+1, err, backoff)
-
-        select {
-        case <-ctx.Done():
-            return nil, ctx.Err()
-        case <-time.After(backoff):
-            backoff *= 2
-            if backoff > 5*time.Second {
-                backoff = 5 * time.Second
-            }
-        }
-    }
-
-    return nil, fmt.Errorf("all retries failed: %w", lastErr)
-}
-```
-
-## Error Context
-
-Wrap errors with additional context:
-
-```go
-data, err := client.ReadDB(ctx, dbNum, start, length)
+err := client.Connect(ctx)
 if err != nil {
-    return fmt.Errorf("failed to read DB%d.DBB%d (length %d): %w", dbNum, start, length, err)
+    if errors.Is(err, s7.ErrCOTPConnectionFailed) {
+        log.Println("COTP failed - check rack/slot")
+    } else if errors.Is(err, s7.ErrS7NegotiationFailed) {
+        log.Println("S7 negotiation failed - PLC may not be compatible")
+    }
 }
 ```
 
 ## Best Practices
 
-1. **Always check errors** - Never ignore return errors
-2. **Use errors.Is()** - For type-safe error comparison
-3. **Add context** - Wrap errors with relevant information
-4. **Handle gracefully** - Provide meaningful error messages to users
-5. **Log appropriately** - Log errors for debugging but don't expose internal details
-6. **Retry transient errors** - Timeouts and connection issues may be temporary
+1. **Always check errors** - Never ignore returned errors
+
+2. **Distinguish error types** - S7 errors (protocol), data errors, network errors
+
+3. **Log errors** - For debugging and monitoring
+
+4. **Use timeouts** - Avoid indefinite blocking
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+defer cancel()
+
+data, err := client.ReadDB(ctx, 1, 0, 10)
+if err != nil {
+    if errors.Is(err, context.DeadlineExceeded) {
+        log.Println("Timeout - the PLC is not responding")
+    }
+}
+```
+
+5. **Handle reconnection** - Either automatically or manually
+
+```go
+// With automatic reconnection
+client, _ := s7.NewClient("...",
+    s7.WithAutoReconnect(true),
+    s7.WithMaxRetries(3),
+)
+
+// Or manual handling
+for {
+    data, err := client.ReadDB(ctx, 1, 0, 10)
+    if err == nil {
+        break
+    }
+    if errors.Is(err, s7.ErrNotConnected) {
+        client.Connect(ctx)
+        continue
+    }
+    return err
+}
+```

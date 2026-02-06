@@ -1,59 +1,55 @@
----
-sidebar_position: 10
----
-
 # Changelog
 
-All notable changes to this project are documented in this file.
+Toutes les modifications notables de ce projet sont documentées dans ce fichier.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.0.0] - 2024-02-01
 
-### Added
+### Ajouté
 
 #### Client
-- Complete OPC UA TCP client with session support
-- Address space navigation (Browse, BrowseNext)
-- Attribute reading (Read) with support for all data types
-- Attribute writing (Write) with type validation
-- Method calls (Call)
-- Endpoint discovery (GetEndpoints)
-- Automatic reconnection with exponential backoff
-- Security policy support (None, Basic128Rsa15, Basic256, Basic256Sha256)
-- Security mode support (None, Sign, SignAndEncrypt)
-- Anonymous, password, and certificate authentication
-- Built-in metrics (latency, counters, connections)
-- Structured logging via slog
+- Client OPC UA TCP complet avec support des sessions
+- Navigation dans l'espace d'adressage (Browse, BrowseNext)
+- Lecture d'attributs (Read) avec support de tous les types de données
+- Écriture d'attributs (Write) avec validation des types
+- Appel de méthodes (Call)
+- Découverte des endpoints (GetEndpoints)
+- Reconnexion automatique avec backoff exponentiel
+- Support des politiques de sécurité (None, Basic128Rsa15, Basic256, Basic256Sha256)
+- Support des modes de sécurité (None, Sign, SignAndEncrypt)
+- Authentification anonyme, par mot de passe et par certificat
+- Métriques intégrées (latence, compteurs, connexions)
+- Logging structuré via slog
 
 #### Subscriptions
-- Subscription creation and deletion
-- Monitored item creation
-- Data change notification reception
-- Publishing and sampling interval configuration
+- Création et suppression de subscriptions
+- Création de monitored items
+- Réception des notifications de changement de données
+- Configuration des intervalles de publication et d'échantillonnage
 
-#### Server
-- OPC UA TCP server with multi-client support
-- Address space management
-- Subscription and monitored item support
-- Customizable authentication
-- Node-level access control
+#### Serveur
+- Serveur OPC UA TCP avec support multi-clients
+- Gestion de l'espace d'adressage
+- Support des subscriptions et monitored items
+- Authentification personnalisable
+- Contrôle d'accès par noeud
 
-#### Connection Pool
-- Connection pool with automatic management
-- Periodic health checks
-- Statistics and metrics
+#### Pool de connexions
+- Pool de connexions avec gestion automatique
+- Health checks périodiques
+- Statistiques et métriques
 
 #### CLI (opcuacli)
-- `browse` command - Address space navigation
-- `read` command - Node value reading
-- `write` command - Value writing
-- `subscribe` command - Change subscription
-- `info` command - Server information
-- `version` command - Version display
+- Commande `browse` - Navigation dans l'espace d'adressage
+- Commande `read` - Lecture de valeurs de noeuds
+- Commande `write` - Écriture de valeurs
+- Commande `subscribe` - Souscription aux changements
+- Commande `info` - Informations sur le serveur
+- Commande `version` - Affichage de la version
 
-### Supported Data Types
+### Types de données supportés
 - Boolean
 - SByte, Byte
 - Int16, UInt16
@@ -71,10 +67,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
-- HistoryRead and HistoryUpdate support
-- RegisterNodes and UnregisterNodes support
-- TranslateBrowsePathsToNodeIds support
-- Improved alarm and event support
-- Automatic discovery support (FindServers)
-- Cluster mode with automatic failover
+### Prévu
+- Support de HistoryRead et HistoryUpdate
+- Support de RegisterNodes et UnregisterNodes
+- Support de TranslateBrowsePathsToNodeIds
+- Amélioration du support des alarmes et événements
+- Support de la découverte automatique (FindServers)
+- Mode cluster avec failover automatique

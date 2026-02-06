@@ -1,7 +1,3 @@
----
-sidebar_position: 4
----
-
 # Modbus TCP Server
 
 The Modbus TCP server allows you to simulate a Modbus device or create a gateway.
@@ -156,7 +152,7 @@ server := modbus.NewServer(handler,
 )
 ```
 
-See [Options](./options) for the complete list.
+See [Options](./options.md) for the complete list.
 
 ## Server Metrics
 

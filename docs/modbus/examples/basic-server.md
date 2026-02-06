@@ -1,7 +1,3 @@
----
-sidebar_position: 2
----
-
 # Example: Modbus Server
 
 A complete example of a Modbus TCP server with the memory handler.
@@ -20,7 +16,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/edgeo/drivers/modbus"
+    "github.com/edgeo-scada/modbus-tcp/modbus"
 )
 
 func main() {
@@ -118,7 +114,7 @@ import (
     "sync"
     "time"
 
-    "github.com/edgeo/drivers/modbus"
+    "github.com/edgeo-scada/modbus-tcp/modbus"
 )
 
 type TemperatureSensorHandler struct {
