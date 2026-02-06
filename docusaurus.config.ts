@@ -35,6 +35,7 @@ const config: Config = {
       'classic',
       {
         docs: {
+          routeBasePath: '/',
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/edgeo-scada/drivers-docs/tree/main/',
         },
@@ -109,27 +110,27 @@ const config: Config = {
           items: [
             {
               label: 'Modbus TCP',
-              to: '/docs/modbus/',
+              to: '/modbus/',
             },
             {
               label: 'OPC UA',
-              to: '/docs/opcua/',
+              to: '/opcua/',
             },
             {
               label: 'MQTT',
-              to: '/docs/mqtt/',
+              to: '/mqtt/',
             },
             {
               label: 'S7',
-              to: '/docs/s7/',
+              to: '/s7/',
             },
             {
               label: 'BACnet',
-              to: '/docs/bacnet/',
+              to: '/bacnet/',
             },
             {
               label: 'SNMP',
-              to: '/docs/snmp/',
+              to: '/snmp/',
             },
           ],
         },

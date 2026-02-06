@@ -17,22 +17,22 @@ function HomepageHeader() {
         </Heading>
         <p className="hero__subtitle">{siteConfig.tagline}</p>
         <div className={styles.buttons}>
-          <Link className="button button--secondary button--lg" to="/docs/modbus/">
+          <Link className="button button--secondary button--lg" to="/modbus/">
             Modbus TCP
           </Link>
-          <Link className="button button--secondary button--lg" to="/docs/opcua/">
+          <Link className="button button--secondary button--lg" to="/opcua/">
             OPC UA
           </Link>
-          <Link className="button button--secondary button--lg" to="/docs/mqtt/">
+          <Link className="button button--secondary button--lg" to="/mqtt/">
             MQTT
           </Link>
-          <Link className="button button--secondary button--lg" to="/docs/s7/">
+          <Link className="button button--secondary button--lg" to="/s7/">
             S7
           </Link>
-          <Link className="button button--secondary button--lg" to="/docs/bacnet/">
+          <Link className="button button--secondary button--lg" to="/bacnet/">
             BACnet
           </Link>
-          <Link className="button button--secondary button--lg" to="/docs/snmp/">
+          <Link className="button button--secondary button--lg" to="/snmp/">
             SNMP
           </Link>
         </div>
@@ -57,7 +57,7 @@ const FeatureList: FeatureItem[] = [
         and built-in metrics.
       </>
     ),
-    link: '/docs/modbus/',
+    link: '/modbus/',
   },
   {
     title: 'OPC UA',
@@ -67,7 +67,7 @@ const FeatureList: FeatureItem[] = [
         and monitored items. Supports multiple security policies and authentication methods.
       </>
     ),
-    link: '/docs/opcua/',
+    link: '/opcua/',
   },
   {
     title: 'MQTT',
@@ -78,7 +78,7 @@ const FeatureList: FeatureItem[] = [
         exponential backoff.
       </>
     ),
-    link: '/docs/mqtt/',
+    link: '/mqtt/',
   },
   {
     title: 'S7 (Siemens)',
@@ -88,7 +88,7 @@ const FeatureList: FeatureItem[] = [
         S7-400, S7-1200, S7-1500, and LOGO! with connection pooling and multi-item operations.
       </>
     ),
-    link: '/docs/s7/',
+    link: '/s7/',
   },
   {
     title: 'BACnet',
@@ -99,7 +99,7 @@ const FeatureList: FeatureItem[] = [
         cross-subnet communication.
       </>
     ),
-    link: '/docs/bacnet/',
+    link: '/bacnet/',
   },
   {
     title: 'SNMP',
@@ -109,7 +109,7 @@ const FeatureList: FeatureItem[] = [
         (SHA-256/512) and encryption (AES-256), connection pooling, and MIB walk operations.
       </>
     ),
-    link: '/docs/snmp/',
+    link: '/snmp/',
   },
 ];
 
