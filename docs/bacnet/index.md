@@ -139,4 +139,4 @@ Common properties with shorthand aliases:
 
 ## License
 
-MIT License
+Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/bacnet/blob/main/LICENSE) for details.

@@ -143,7 +143,7 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Edgeo. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Edgeo SCADA. Licensed under Apache 2.0. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

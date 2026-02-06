@@ -6,7 +6,7 @@ slug: /
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](./changelog)
 [![Go](https://img.shields.io/badge/go-1.21+-00ADD8.svg)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/edgeo-scada/modbus-tcp/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/edgeo-scada/modbus-tcp/blob/main/LICENSE)
 
 A complete Go implementation of the Modbus TCP protocol, with client, server, and connection pool.
 

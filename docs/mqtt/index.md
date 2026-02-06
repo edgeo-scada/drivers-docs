@@ -120,4 +120,4 @@ mqtt/
 
 ## License
 
-MIT License
+Apache License 2.0 - see [LICENSE](https://github.com/edgeo-scada/mqtt/blob/main/LICENSE) for details.
